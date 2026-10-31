@@ -1169,3 +1169,8 @@ sync-storage-dropbox-redirect-success-title = Dropbox 연결 완료
 sync-storage-dropbox-redirect-success = 이 페이지를 닫고 { -app-name }로 돌아가세요.
 sync-storage-dropbox-redirect-failure-title = Dropbox 연결 안 됨
 sync-storage-dropbox-redirect-failure = { -app-name }가 이 승인을 기다리고 있지 않았거나 접근이 거부되었습니다. { -app-name } 설정의 동기화 화면에서 다시 시작하세요.
+
+menu-view-readable-skin =
+    .label = 가독성 스킨
+itembox-show-empty-fields = 빈 필드 { $count }개 보기
+itembox-hide-empty-fields = 빈 필드 숨기기

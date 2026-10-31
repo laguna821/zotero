@@ -116,3 +116,8 @@
 @import "elements/itemPaneCustomSection";
 @import "elements/contextPane";
 @import "elements/fileRenamingSettings";
+
+// Readable skin -- last, so that it overrides component styles
+// --------------------------------------------------
+
+@import "themes/readable";

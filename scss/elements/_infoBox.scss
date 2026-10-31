@@ -86,9 +86,14 @@ info-box {
 	}
 
 
-	#more-creators-label
+	#more-creators-label, #empty-fields-label
 	{
 		font-weight: 600;
+	}
+	
+	#empty-fields-label {
+		color: var(--fill-secondary);
+		cursor: pointer;
 	}
 
 	.pointer:hover, .pointer:hover > label {

@@ -49,6 +49,7 @@ Zotero.UIProperties = new (class {
 	set(root) {
 		this._setFontSize(root);
 		this._setUIDensity(root);
+		this._setReadableSkin(root);
 		root.dispatchEvent(new Event('UIPropertiesChanged', { bubbles: false }));
 	}
 	
@@ -83,5 +84,12 @@ Zotero.UIProperties = new (class {
 		let density = Zotero.Prefs.get('uiDensity');
 		root.style.setProperty('--zotero-ui-density', density);
 		root.setAttribute('zoteroUIDensity', density);
+	}
+	
+	// The skin's color variables are defined on the document root, so set the attribute there too
+	_setReadableSkin(root) {
+		let enabled = !!Zotero.Prefs.get('readableSkin');
+		root.toggleAttribute('readableSkin', enabled);
+		root.ownerDocument.documentElement.toggleAttribute('readableSkin', enabled);
 	}
 });

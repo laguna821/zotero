@@ -504,6 +504,7 @@ const ZoteroStandalone = new function () {
 		let density = Zotero.Prefs.get('uiDensity');
 		this.updateMenuItemCheckmark('view-menuitem-ui-density-compact', density == 'compact');
 		this.updateMenuItemCheckmark('view-menuitem-ui-density-comfortable', density == 'comfortable');
+		this.updateMenuItemCheckmark('view-menuitem-readable-skin', !!Zotero.Prefs.get('readableSkin'));
 		
 		// Panes
 		this.updateMenuItemCheckmark(
@@ -631,6 +632,10 @@ const ZoteroStandalone = new function () {
 			
 			case 'ui-density-compact':
 				Zotero.Prefs.set('uiDensity', 'compact');
+				break;
+			
+			case 'readable-skin':
+				Zotero.Prefs.set('readableSkin', !Zotero.Prefs.get('readableSkin'));
 				break;
 			
 			case 'collections-pane':

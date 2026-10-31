@@ -159,6 +159,8 @@ user_pref("extensions.zotero.httpServer.port", 23124);	// ascii "ZT"
 user_pref("extensions.zotero.httpServer.localAPI.enabled", true);
 user_pref("extensions.zotero.backup.numBackups", 0);
 user_pref("extensions.zotero.sync.autoSync", false);
+// Test the stock UI by default -- readableSkinTest.js turns the skin on
+user_pref("extensions.zotero.readableSkin", false);
 user_pref("extensions.zoteroMacWordIntegration.installed", true);
 user_pref("extensions.zoteroMacWordIntegration.skipInstallation", true);
 user_pref("extensions.zoteroWinWordIntegration.skipInstallation", true);

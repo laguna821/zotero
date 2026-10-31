@@ -1305,3 +1305,11 @@ sync-storage-dropbox-redirect-success-title = Dropbox Connected
 sync-storage-dropbox-redirect-success = You can close this page and return to { -app-name }.
 sync-storage-dropbox-redirect-failure-title = Dropbox Not Connected
 sync-storage-dropbox-redirect-failure = { -app-name } wasn’t waiting for this authorization, or access was denied. Start again from the Sync pane of the { -app-name } settings.
+
+menu-view-readable-skin =
+    .label = Readable Skin
+itembox-show-empty-fields = { $count ->
+    [one] Show { $count } Empty Field
+   *[other] Show { $count } Empty Fields
+}
+itembox-hide-empty-fields = Hide Empty Fields
