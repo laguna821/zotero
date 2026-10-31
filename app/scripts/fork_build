@@ -153,7 +153,7 @@ for (( i=0; i<${#platforms}; i++ )); do
 		w)
 			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p w -a x64 -c "$UPDATE_CHANNEL" -s
 			stage="$STAGE_DIR/Zotero_win-x64"
-			install_window_icons "$stage"
+			install_window_icons "$stage/app"
 			set_windows_exe_icon "$stage/zotero.exe"
 			package="$DIST_DIR/Zotero-${version}_win-x64.zip"
 			rm -f "$package"
