@@ -696,10 +696,19 @@ Zotero_Preferences.Sync = {
 	
 	_lastStorageProtocol: null,
 	_lastStorageURL: null,
+	_lastDropboxLocation: null,
 	
 	storeLastStorageSettings: function () {
 		this._lastStorageProtocol = Zotero.Prefs.get('sync.storage.protocol');
 		this._lastStorageURL = Zotero.Prefs.get('sync.storage.url');
+		this._lastDropboxLocation = this._getDropboxLocation();
+	},
+	
+	
+	// Files are stored per Dropbox app and folder
+	_getDropboxLocation: function () {
+		var dropbox = Zotero.Sync.Storage.Dropbox;
+		return dropbox.appKey + dropbox.folder;
 	},
 	
 	
@@ -709,18 +718,16 @@ Zotero_Preferences.Sync = {
 		var protocol = Zotero.Prefs.get('sync.storage.protocol');
 		var enabled = Zotero.Prefs.get('sync.storage.enabled');
 		
-		var storageSettings = document.getElementById('storage-settings');
-		var protocolMenu = document.getElementById('storage-protocol');
 		var settings = document.getElementById('storage-webdav-settings');
+		var dropboxSettings = document.getElementById('storage-dropbox-settings');
 		var sep = document.getElementById('storage-separator');
 		
-		if (!enabled || protocol == 'zotero') {
-			settings.hidden = true;
-			sep.hidden = false;
-		}
-		else {
-			settings.hidden = false;
-			sep.hidden = true;
+		settings.hidden = !enabled || protocol != 'webdav';
+		dropboxSettings.hidden = !enabled || protocol != 'dropbox';
+		sep.hidden = !settings.hidden || !dropboxSettings.hidden;
+		
+		if (!dropboxSettings.hidden) {
+			await this.updateDropboxUI();
 		}
 		
 		document.getElementById('storage-user-download-mode').disabled = !enabled;
@@ -758,6 +765,7 @@ Zotero_Preferences.Sync = {
 	onStorageSettingsChange: async function() {
 		var oldProtocol = this._lastStorageProtocol;
 		var oldURL = this._lastStorageURL;
+		var oldDropboxLocation = this._lastDropboxLocation;
 		
 		// Necessary for pref to update
 		await Zotero.Promise.delay(1);
@@ -768,8 +776,25 @@ Zotero_Preferences.Sync = {
 			.replace(/(^https?:\/\/|^:?\/\/|\/zotero\/?$|\/$)/g, '')
 		Zotero.Prefs.set('sync.storage.url', newURL);
 		
-		if (oldProtocol != newProtocol || oldURL != newURL) {
+		// Store the normalized Dropbox folder
+		Zotero.Prefs.set('sync.storage.dropbox.folder', Zotero.Sync.Storage.Dropbox.folder);
+		var newDropboxLocation = this._getDropboxLocation();
+		
+		if (oldProtocol != newProtocol
+				|| (newProtocol == 'webdav' && oldURL != newURL)
+				|| (newProtocol == 'dropbox' && oldDropboxLocation != newDropboxLocation)) {
 			await Zotero.Sync.Storage.Local.resetAllSyncStates(Zotero.Libraries.userLibraryID);
+		}
+		
+		if (oldDropboxLocation != newDropboxLocation) {
+			// A different app key needs a new authorization, and a different folder needs
+			// to be verified
+			Zotero.Sync.Storage.Dropbox.cancelAuthorization();
+			Zotero.Sync.Storage.Dropbox.clearAccessToken();
+			Zotero.Prefs.set('sync.storage.dropbox.verified', false);
+		}
+		if (oldProtocol == 'dropbox' || newProtocol == 'dropbox') {
+			Zotero.Sync.Runner.resetStorageController('dropbox');
 		}
 		
 		if (oldProtocol == 'webdav') {
@@ -920,6 +945,274 @@ Zotero_Preferences.Sync = {
 	unverifyStorageServer: function () {
 		Zotero.debug("Unverifying storage");
 		Zotero.Prefs.set('sync.storage.verified', false);
+	},
+	
+	
+	//
+	// Dropbox
+	//
+	_dropboxAuthorization: null,
+	
+	updateDropboxUI: async function () {
+		var dropbox = Zotero.Sync.Storage.Dropbox;
+		var connected = await dropbox.isConnected();
+		var authorizing = !!this._dropboxAuthorization;
+		
+		document.getElementById('storage-dropbox-redirect-uri').value = dropbox.redirectURI;
+		
+		var account = document.getElementById('storage-dropbox-account');
+		if (connected) {
+			let name = dropbox.accountName;
+			let email = dropbox.accountEmail;
+			if (name || email) {
+				document.l10n.setAttributes(account, 'preferences-sync-dropbox-connected', {
+					account: name && email ? `${name} (${email})` : (name || email)
+				});
+			}
+			else {
+				document.l10n.setAttributes(account, 'preferences-sync-dropbox-connected-unknown');
+			}
+		}
+		else {
+			document.l10n.setAttributes(account, 'preferences-sync-dropbox-not-connected');
+		}
+		
+		document.getElementById('storage-dropbox-connect').hidden = connected || authorizing;
+		document.getElementById('storage-dropbox-verify').hidden = !connected || authorizing;
+		document.getElementById('storage-dropbox-disconnect').hidden = !connected || authorizing;
+		document.getElementById('storage-dropbox-waiting').hidden = !authorizing;
+	},
+	
+	
+	/**
+	 * Authorize access to the user's Dropbox in the browser
+	 *
+	 * @param {Boolean} [manual] - Paste the code shown by Dropbox instead of receiving it through
+	 *     the local HTTP server
+	 */
+	connectDropbox: async function (manual) {
+		var dropbox = Zotero.Sync.Storage.Dropbox;
+		
+		await this.onStorageSettingsChange();
+		if (!dropbox.appKey) {
+			Zotero.alert(
+				window,
+				Zotero.getString('general.error'),
+				Zotero.ftl.formatValueSync('sync-storage-dropbox-error-no-app-key')
+			);
+			document.getElementById('storage-dropbox-app-key').focus();
+			return;
+		}
+		
+		var authorization = {};
+		this._dropboxAuthorization = authorization;
+		await this.updateDropboxUI();
+		
+		try {
+			let { url, verifier, redirectURI, codePromise } = await dropbox.startAuthorization({
+				manual: !!manual
+			});
+			Zotero.launchURL(url);
+			let code;
+			if (manual) {
+				code = this._promptForDropboxCode();
+				if (!code) {
+					throw new Zotero.Sync.UserCancelledException();
+				}
+			}
+			else {
+				code = await codePromise;
+			}
+			if (this._dropboxAuthorization !== authorization) {
+				return;
+			}
+			await dropbox.completeAuthorization(code, verifier, redirectURI);
+		}
+		catch (e) {
+			if (this._dropboxAuthorization === authorization) {
+				this._dropboxAuthorization = null;
+			}
+			await this.updateDropboxUI();
+			if (e instanceof Zotero.Sync.UserCancelledException) {
+				return;
+			}
+			Zotero.logError(e);
+			Zotero.Utilities.Internal.errorPrompt(Zotero.getString('general.error'), e);
+			return;
+		}
+		
+		this._dropboxAuthorization = null;
+		Zotero.Sync.Runner.resetStorageController('dropbox');
+		await this.updateDropboxUI();
+		await this.verifyDropbox();
+	},
+	
+	
+	cancelDropboxAuthorization: async function () {
+		this._dropboxAuthorization = null;
+		Zotero.Sync.Storage.Dropbox.cancelAuthorization();
+		await this.updateDropboxUI();
+	},
+	
+	
+	_promptForDropboxCode: function () {
+		var input = { value: "" };
+		var ok = Services.prompt.prompt(
+			window,
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-enter-code-title'),
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-enter-code-text'),
+			input,
+			null,
+			{}
+		);
+		return ok ? input.value.trim() : "";
+	},
+	
+	
+	verifyDropbox: async function () {
+		var controller = Zotero.Sync.Runner.getStorageController('dropbox');
+		var button = document.getElementById('storage-dropbox-verify');
+		button.disabled = true;
+		try {
+			await controller.checkServer();
+		}
+		catch (e) {
+			await controller.handleVerificationError(e, window);
+			return false;
+		}
+		finally {
+			button.disabled = false;
+			await this.updateDropboxUI();
+		}
+		
+		Zotero.alert(
+			window,
+			Zotero.getString('sync.storage.serverConfigurationVerified'),
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-set-up', {
+				folder: Zotero.Sync.Storage.Dropbox.folder
+			})
+		);
+		return true;
+	},
+	
+	
+	disconnectDropbox: async function () {
+		var ok = Services.prompt.confirm(
+			window,
+			"Dropbox",
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-disconnect-confirm')
+		);
+		if (!ok) {
+			return;
+		}
+		await Zotero.Sync.Storage.Dropbox.disconnect();
+		Zotero.Sync.Runner.resetStorageController('dropbox');
+		await this.updateDropboxUI();
+	},
+	
+	
+	/**
+	 * Download files that are missing on this computer from Zotero Storage, so that they can be
+	 * uploaded to Dropbox when switching from Zotero Storage
+	 */
+	downloadMissingFromZoteroStorage: async function () {
+		var button = document.getElementById('storage-dropbox-download-missing');
+		var apiKey = await Zotero.Sync.Data.Local.getAPIKey();
+		if (!apiKey) {
+			Zotero.alert(
+				window,
+				Zotero.getString('general.error'),
+				Zotero.ftl.formatValueSync('preferences-sync-dropbox-download-missing-no-account')
+			);
+			return;
+		}
+		
+		var libraryID = Zotero.Libraries.userLibraryID;
+		var sql = "SELECT itemID FROM items JOIN itemAttachments USING (itemID) "
+			+ "WHERE libraryID=? AND linkMode IN (?, ?, ?)";
+		var itemIDs = await Zotero.DB.columnQueryAsync(sql, [
+			libraryID,
+			Zotero.Attachments.LINK_MODE_IMPORTED_FILE,
+			Zotero.Attachments.LINK_MODE_IMPORTED_URL,
+			Zotero.Attachments.LINK_MODE_EMBEDDED_IMAGE
+		]);
+		var missing = [];
+		for (let item of await Zotero.Items.getAsync(itemIDs)) {
+			if (!(await item.fileExists())) {
+				missing.push(item);
+			}
+		}
+		if (!missing.length) {
+			Zotero.alert(
+				window,
+				"Dropbox",
+				Zotero.ftl.formatValueSync('preferences-sync-dropbox-download-missing-none')
+			);
+			return;
+		}
+		
+		var ok = Services.prompt.confirm(
+			window,
+			"Dropbox",
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-download-missing-confirm', {
+				count: missing.length
+			})
+		);
+		if (!ok) {
+			return;
+		}
+		
+		var controller = new Zotero.Sync.Storage.Mode.ZFS({
+			apiClient: Zotero.Sync.Runner.getAPIClient({ apiKey })
+		});
+		var downloaded = [];
+		var failed = 0;
+		button.disabled = true;
+		try {
+			for (let item of missing) {
+				document.l10n.setAttributes(button, 'preferences-sync-dropbox-download-missing-progress', {
+					current: downloaded.length + failed + 1,
+					total: missing.length
+				});
+				let request = new Zotero.Sync.Storage.Request({
+					type: 'download',
+					libraryID,
+					name: item.libraryKey,
+					onStart: [r => controller.downloadFile(r)]
+				});
+				try {
+					await request.start();
+				}
+				catch (e) {
+					Zotero.logError(e);
+				}
+				if (await item.fileExists()) {
+					downloaded.push(item);
+				}
+				else {
+					failed++;
+				}
+			}
+			
+			// Upload the downloaded files on the next Dropbox sync
+			if (downloaded.length
+					&& Zotero.Sync.Storage.Local.getModeForLibrary(libraryID) == 'dropbox') {
+				await Zotero.Sync.Storage.Local.updateSyncStates(downloaded, 'to_upload');
+			}
+		}
+		finally {
+			button.disabled = false;
+			document.l10n.setAttributes(button, 'preferences-sync-dropbox-download-missing');
+		}
+		
+		Zotero.alert(
+			window,
+			"Dropbox",
+			Zotero.ftl.formatValueSync('preferences-sync-dropbox-download-missing-done', {
+				downloaded: downloaded.length,
+				failed
+			})
+		);
 	},
 	
 	

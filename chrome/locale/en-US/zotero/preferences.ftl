@@ -163,3 +163,43 @@ fulltext-stats-attachments-indexed = Attachments indexed:
 fulltext-stats-partially-indexed = Partially indexed:
 fulltext-stats-not-available = Full-text content or file not available:
 fulltext-stats-notes-indexed = Notes indexed:
+
+## Dropbox file sync
+
+preferences-sync-dropbox-intro = Attachment files in My Library are stored in your Dropbox. Items, notes, and annotations still sync with your { -app-name } account.
+preferences-sync-dropbox-setup-hint = In the <label data-l10n-name="app-console-link">Dropbox App Console</label>, create an app with “App folder” access, turn on files.content.write, files.content.read, and files.metadata.read on the Permissions tab, add the redirect URI below on the Settings tab, and enter the app key here.
+preferences-sync-dropbox-redirect-uri = Redirect URI:
+preferences-sync-dropbox-app-key = App key:
+preferences-sync-dropbox-folder = Folder:
+preferences-sync-dropbox-account = Account:
+preferences-sync-dropbox-connected = { $account }
+preferences-sync-dropbox-connected-unknown = Connected
+preferences-sync-dropbox-not-connected = Not connected
+preferences-sync-dropbox-connect =
+    .label = Connect Dropbox…
+preferences-sync-dropbox-verify =
+    .label = Verify Connection
+preferences-sync-dropbox-disconnect =
+    .label = Disconnect
+preferences-sync-dropbox-waiting = Allow access in your browser…
+preferences-sync-dropbox-enter-code =
+    .label = Enter Code Instead…
+preferences-sync-dropbox-cancel =
+    .label = Cancel
+preferences-sync-dropbox-enter-code-title = Connect Dropbox
+preferences-sync-dropbox-enter-code-text = Allow access in your browser, and then paste the code that Dropbox shows:
+preferences-sync-dropbox-set-up = File syncing with Dropbox is set up. Attachment files in My Library will be stored in “{ $folder }” in your Dropbox app folder.
+preferences-sync-dropbox-disconnect-confirm = Disconnect Dropbox? Files already stored in Dropbox will stay there.
+preferences-sync-dropbox-migrate-hint = Switching from { -app-name } Storage? Files that aren’t on this computer can’t be uploaded to Dropbox, so download them from { -app-name } Storage first.
+preferences-sync-dropbox-download-missing =
+    .label = Download Missing Files from { -app-name } Storage…
+preferences-sync-dropbox-download-missing-progress =
+    .label = Downloading { $current } of { $total }…
+preferences-sync-dropbox-download-missing-no-account = Log in with your { -app-name } account first.
+preferences-sync-dropbox-download-missing-none = All attachment files in My Library are already on this computer.
+preferences-sync-dropbox-download-missing-confirm = { $count ->
+    [one] Download { $count } file that isn’t on this computer from { -app-name } Storage?
+   *[other] Download { $count } files that aren’t on this computer from { -app-name } Storage?
+}
+preferences-sync-dropbox-download-missing-done = Downloaded: { $downloaded }. Not available: { $failed }. Downloaded files will be uploaded to Dropbox the next time you sync.
+preferences-sync-dropbox-groups-note = Attachment files in group libraries always sync using { -app-name } Storage.

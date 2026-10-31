@@ -7,9 +7,24 @@ Zotero.Sync.Storage.Utilities = {
 		case 'webdav':
 			return Zotero.Sync.Storage.Mode.WebDAV;
 		
+		case 'dropbox':
+			return Zotero.Sync.Storage.Mode.Dropbox;
+		
 		default:
 			throw new Error("Invalid storage mode '" + mode + "'");
 		}
+	},
+	
+	/**
+	 * Whether the client manages the file store itself for a storage mode, recording file
+	 * properties in the API, logging deletions for purging, and purging orphaned files, rather
+	 * than the Zotero servers doing it
+	 *
+	 * @param {String} mode
+	 * @return {Boolean}
+	 */
+	usesClientManagedStorage: function (mode) {
+		return mode == 'webdav' || mode == 'dropbox';
 	},
 	
 	getItemFromRequest: function (request) {

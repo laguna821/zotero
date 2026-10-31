@@ -96,6 +96,28 @@
 	padding-bottom: 0.5em;
 }
 
+.storage-dropbox-content {
+	padding: 0.6em 0.8em;
+	gap: 0.5em;
+}
+
+.storage-dropbox-hint {
+	font-size: .9em;
+	opacity: .85;
+}
+
+#storage-dropbox-buttons {
+	gap: 6px;
+
+	button {
+		margin-inline: 0;
+	}
+}
+
+#storage-dropbox-waiting {
+	gap: 6px;
+}
+
 #storage-verify, #storage-abort, #storage-clean
 {
 	margin-inline-start: 0;

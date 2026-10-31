@@ -143,3 +143,40 @@ fulltext-stats-attachments-indexed = Attachments indexed:
 fulltext-stats-partially-indexed = Partially indexed:
 fulltext-stats-not-available = Full-text content or file not available:
 fulltext-stats-notes-indexed = Notes indexed:
+
+## Dropbox file sync
+
+preferences-sync-dropbox-intro = 내 라이브러리의 첨부파일은 Dropbox에 저장합니다. 문헌 정보·메모·주석은 지금처럼 { -app-name } 계정으로 동기화합니다.
+preferences-sync-dropbox-setup-hint = <label data-l10n-name="app-console-link">Dropbox App Console</label>에서 “App folder” 접근 방식으로 앱을 만들고, Permissions 탭에서 files.content.write, files.content.read, files.metadata.read를 켜세요. Settings 탭의 Redirect URIs에 아래 주소를 추가한 다음 App key를 여기에 붙여 넣으세요.
+preferences-sync-dropbox-redirect-uri = 리디렉션 주소:
+preferences-sync-dropbox-app-key = 앱 키:
+preferences-sync-dropbox-folder = 폴더:
+preferences-sync-dropbox-account = 계정:
+preferences-sync-dropbox-connected = { $account }
+preferences-sync-dropbox-connected-unknown = 연결됨
+preferences-sync-dropbox-not-connected = 연결되지 않음
+preferences-sync-dropbox-connect =
+    .label = Dropbox 연결…
+preferences-sync-dropbox-verify =
+    .label = 연결 확인
+preferences-sync-dropbox-disconnect =
+    .label = 연결 해제
+preferences-sync-dropbox-waiting = 브라우저에서 접근을 허용하세요…
+preferences-sync-dropbox-enter-code =
+    .label = 코드로 연결…
+preferences-sync-dropbox-cancel =
+    .label = 취소
+preferences-sync-dropbox-enter-code-title = Dropbox 연결
+preferences-sync-dropbox-enter-code-text = 브라우저에서 접근을 허용한 뒤 Dropbox가 보여 주는 코드를 붙여 넣으세요:
+preferences-sync-dropbox-set-up = Dropbox 파일 동기화가 준비되었습니다. 내 라이브러리의 첨부파일은 Dropbox 앱 폴더의 “{ $folder }”에 저장됩니다.
+preferences-sync-dropbox-disconnect-confirm = Dropbox 연결을 해제할까요? Dropbox에 이미 저장된 파일은 그대로 남습니다.
+preferences-sync-dropbox-migrate-hint = { -app-name } Storage에서 옮겨 오나요? 이 컴퓨터에 없는 파일은 Dropbox에 올릴 수 없으니 먼저 { -app-name } Storage에서 받아 두세요.
+preferences-sync-dropbox-download-missing =
+    .label = { -app-name } Storage에서 빠진 파일 받기…
+preferences-sync-dropbox-download-missing-progress =
+    .label = { $total }개 중 { $current }번째 받는 중…
+preferences-sync-dropbox-download-missing-no-account = 먼저 { -app-name } 계정으로 로그인하세요.
+preferences-sync-dropbox-download-missing-none = 내 라이브러리의 첨부파일이 모두 이 컴퓨터에 있습니다.
+preferences-sync-dropbox-download-missing-confirm = 이 컴퓨터에 없는 파일 { $count }개를 { -app-name } Storage에서 받을까요?
+preferences-sync-dropbox-download-missing-done = 받은 파일: { $downloaded }개. 받을 수 없는 파일: { $failed }개. 받은 파일은 다음 동기화 때 Dropbox에 올라갑니다.
+preferences-sync-dropbox-groups-note = 그룹 라이브러리의 첨부파일은 항상 { -app-name } Storage로 동기화합니다.

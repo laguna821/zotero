@@ -139,6 +139,7 @@
 						<menupopup>
 							<menuitem label="Zotero Storage" value="zotero"/>
 							<menuitem label="WebDAV" value="webdav"/>
+							<menuitem label="Dropbox" value="dropbox"/>
 						</menupopup>
 					</menulist>
 				</hbox>
@@ -193,6 +194,75 @@
 						</hbox>
 					</grid>
 
+				</stack>
+
+				<stack id="storage-dropbox-settings" hidden="true" style="margin-top: .5em; margin-bottom: .8em; border: 1px gray solid; border-radius: 3px">
+					<!-- Background shading -->
+					<box style="background: black; opacity:.03"/>
+
+					<vbox class="storage-dropbox-content">
+						<description data-l10n-id="preferences-sync-dropbox-intro"/>
+						<description class="storage-dropbox-hint" data-l10n-id="preferences-sync-dropbox-setup-hint">
+							<label is="zotero-text-link" href="https://www.dropbox.com/developers/apps" data-l10n-name="app-console-link"/>
+						</description>
+
+						<html:div class="form-grid">
+							<label control="storage-dropbox-redirect-uri" data-l10n-id="preferences-sync-dropbox-redirect-uri"/>
+							<hbox>
+								<html:input id="storage-dropbox-redirect-uri" style="flex: 1;" readonly="true"/>
+							</hbox>
+
+							<label control="storage-dropbox-app-key" data-l10n-id="preferences-sync-dropbox-app-key"/>
+							<hbox>
+								<html:input id="storage-dropbox-app-key" style="flex: 1;"
+									spellcheck="false"
+									preference="extensions.zotero.sync.storage.dropbox.appKey"
+									onchange="Zotero_Preferences.Sync.onStorageSettingsChange()"/>
+							</hbox>
+
+							<label control="storage-dropbox-folder" data-l10n-id="preferences-sync-dropbox-folder"/>
+							<hbox>
+								<html:input id="storage-dropbox-folder" style="flex: 1;"
+									spellcheck="false"
+									preference="extensions.zotero.sync.storage.dropbox.folder"
+									onchange="Zotero_Preferences.Sync.onStorageSettingsChange()"/>
+							</hbox>
+
+							<label data-l10n-id="preferences-sync-dropbox-account"/>
+							<hbox>
+								<label id="storage-dropbox-account"/>
+							</hbox>
+
+							<box/>
+							<hbox id="storage-dropbox-buttons">
+								<button id="storage-dropbox-connect"
+									data-l10n-id="preferences-sync-dropbox-connect"
+									oncommand="Zotero_Preferences.Sync.connectDropbox()"/>
+								<button id="storage-dropbox-verify" hidden="true"
+									data-l10n-id="preferences-sync-dropbox-verify"
+									oncommand="Zotero_Preferences.Sync.verifyDropbox()"/>
+								<button id="storage-dropbox-disconnect" hidden="true"
+									data-l10n-id="preferences-sync-dropbox-disconnect"
+									oncommand="Zotero_Preferences.Sync.disconnectDropbox()"/>
+								<hbox id="storage-dropbox-waiting" hidden="true" align="center">
+									<label class="account-login-status-indicator" animated="true"/>
+									<label data-l10n-id="preferences-sync-dropbox-waiting"/>
+									<button data-l10n-id="preferences-sync-dropbox-enter-code"
+										oncommand="Zotero_Preferences.Sync.connectDropbox(true)"/>
+									<button data-l10n-id="preferences-sync-dropbox-cancel"
+										oncommand="Zotero_Preferences.Sync.cancelDropboxAuthorization()"/>
+								</hbox>
+							</hbox>
+						</html:div>
+
+						<description class="storage-dropbox-hint" data-l10n-id="preferences-sync-dropbox-migrate-hint"/>
+						<hbox>
+							<button id="storage-dropbox-download-missing"
+								data-l10n-id="preferences-sync-dropbox-download-missing"
+								oncommand="Zotero_Preferences.Sync.downloadMissingFromZoteroStorage()"/>
+						</hbox>
+						<description class="storage-dropbox-hint" data-l10n-id="preferences-sync-dropbox-groups-note"/>
+					</vbox>
 				</stack>
 
 				<hbox class="storage-settings-download-options" align="center">

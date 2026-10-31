@@ -294,8 +294,8 @@ Zotero.Sync.Storage.Engine.prototype.start = async function () {
 		Zotero.logError(e);
 	}
 	
-	// If WebDAV sync, purge orphaned files
-	if (downloadSuccessful && this.controller.mode == 'webdav') {
+	// If WebDAV or Dropbox sync, purge orphaned files
+	if (downloadSuccessful && this.utils.usesClientManagedStorage(this.controller.mode)) {
 		try {
 			await this.controller.purgeOrphanedStorageFiles(libraryID);
 		}

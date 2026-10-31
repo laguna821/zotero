@@ -67,7 +67,9 @@ Zotero.Sync.EventListeners.ChangeListener = new function () {
 						if (type == 'item') {
 							if (storageForLibrary[libraryID] === undefined) {
 								storageForLibrary[libraryID] =
-									Zotero.Sync.Storage.Local.getModeForLibrary(libraryID) == 'webdav';
+									Zotero.Sync.Storage.Utilities.usesClientManagedStorage(
+										Zotero.Sync.Storage.Local.getModeForLibrary(libraryID)
+									);
 							}
 							if (storageForLibrary[libraryID] && extraData[id].storageDeleteLog) {
 								storageSets.push(libraryID, key);

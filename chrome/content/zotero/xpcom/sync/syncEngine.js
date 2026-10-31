@@ -1340,11 +1340,13 @@ Zotero.Sync.Data.Engine.prototype._uploadObjects = async function (objectType, i
 						{
 							restoreToServer: this._restoringToServer,
 							// Only include storage properties ('mtime', 'md5') when restoring to
-							// server and for WebDAV files
+							// server and for WebDAV and Dropbox files
 							skipStorageProperties:
 								objectType == 'item'
 									? !this._restoringToServer
-										&& Zotero.Sync.Storage.Local.getModeForLibrary(this.library.libraryID) != 'webdav'
+										&& !Zotero.Sync.Storage.Utilities.usesClientManagedStorage(
+											Zotero.Sync.Storage.Local.getModeForLibrary(this.library.libraryID)
+										)
 									: undefined
 						}
 					);

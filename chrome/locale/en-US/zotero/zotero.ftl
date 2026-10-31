@@ -1287,3 +1287,20 @@ menu-edit-redo-action = Redo { $action }
 
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+## Dropbox file sync
+
+sync-storage-dropbox-error-default = A Dropbox file sync error occurred. Please try syncing again.
+sync-storage-dropbox-error-default-restart = A Dropbox file sync error occurred. Please restart { -app-name } and try syncing again.
+sync-storage-dropbox-error-no-app-key = Enter the app key of your Dropbox app in the Sync pane of the { -app-name } settings.
+sync-storage-dropbox-error-not-connected = Your Dropbox account isn’t connected. Connect Dropbox in the Sync pane of the { -app-name } settings.
+sync-storage-dropbox-error-auth-revoked = Access to your Dropbox has expired or was revoked. Reconnect Dropbox in the Sync pane of the { -app-name } settings.
+sync-storage-dropbox-error-missing-scope = Your Dropbox app doesn’t have the “{ $scope }” permission. Turn it on in the Permissions tab of the app in the Dropbox App Console, and then reconnect Dropbox.
+sync-storage-dropbox-error-not-a-folder = “{ $folder }” in your Dropbox is a file, not a folder. Choose a different folder for file syncing.
+sync-storage-dropbox-error-insufficient-space = A file upload failed because your Dropbox is full.
+sync-storage-dropbox-error-api = Dropbox returned an error: { $error }
+sync-storage-dropbox-error-http = Dropbox returned an HTTP { $status } error. If you receive this message repeatedly, check your Dropbox settings in the Sync pane of the { -app-name } settings.
+sync-storage-dropbox-redirect-success-title = Dropbox Connected
+sync-storage-dropbox-redirect-success = You can close this page and return to { -app-name }.
+sync-storage-dropbox-redirect-failure-title = Dropbox Not Connected
+sync-storage-dropbox-redirect-failure = { -app-name } wasn’t waiting for this authorization, or access was denied. Start again from the Sync pane of the { -app-name } settings.

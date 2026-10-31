@@ -156,6 +156,7 @@ const xpcomFilesLocal = [
 	'storage/storageUtilities',
 	'storage/zfs',
 	'storage/webdav',
+	'storage/dropbox',
 	'syncedSettings',
 	'uri',
 	'users',

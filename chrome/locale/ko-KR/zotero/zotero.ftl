@@ -1151,3 +1151,20 @@ menu-edit-undo-action = Undo { $action }
 menu-edit-redo-action = Redo { $action }
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+## Dropbox file sync
+
+sync-storage-dropbox-error-default = Dropbox 파일 동기화 중 오류가 났습니다. 다시 동기화해 보세요.
+sync-storage-dropbox-error-default-restart = Dropbox 파일 동기화 중 오류가 났습니다. { -app-name }를 다시 시작한 뒤 동기화해 보세요.
+sync-storage-dropbox-error-no-app-key = { -app-name } 설정의 동기화 화면에서 Dropbox 앱 키를 입력하세요.
+sync-storage-dropbox-error-not-connected = Dropbox 계정이 연결되어 있지 않습니다. { -app-name } 설정의 동기화 화면에서 Dropbox를 연결하세요.
+sync-storage-dropbox-error-auth-revoked = Dropbox 접근 권한이 만료되었거나 취소되었습니다. { -app-name } 설정의 동기화 화면에서 Dropbox를 다시 연결하세요.
+sync-storage-dropbox-error-missing-scope = Dropbox 앱에 “{ $scope }” 권한이 없습니다. Dropbox App Console의 Permissions 탭에서 이 권한을 켠 뒤 Dropbox를 다시 연결하세요.
+sync-storage-dropbox-error-not-a-folder = Dropbox의 “{ $folder }”는 폴더가 아니라 파일입니다. 파일 동기화에 쓸 다른 폴더를 지정하세요.
+sync-storage-dropbox-error-insufficient-space = Dropbox 저장 공간이 부족해 파일을 올리지 못했습니다.
+sync-storage-dropbox-error-api = Dropbox가 오류를 알렸습니다: { $error }
+sync-storage-dropbox-error-http = Dropbox가 HTTP { $status } 오류를 알렸습니다. 계속 반복되면 { -app-name } 설정의 동기화 화면에서 Dropbox 설정을 확인하세요.
+sync-storage-dropbox-redirect-success-title = Dropbox 연결 완료
+sync-storage-dropbox-redirect-success = 이 페이지를 닫고 { -app-name }로 돌아가세요.
+sync-storage-dropbox-redirect-failure-title = Dropbox 연결 안 됨
+sync-storage-dropbox-redirect-failure = { -app-name }가 이 승인을 기다리고 있지 않았거나 접근이 거부되었습니다. { -app-name } 설정의 동기화 화면에서 다시 시작하세요.

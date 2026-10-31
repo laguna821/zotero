@@ -70,8 +70,10 @@ Zotero.Sync.Storage.Local = {
 	getModeForLibrary: function (libraryID) {
 		var libraryType = Zotero.Libraries.get(libraryID).libraryType;
 		switch (libraryType) {
-		case 'user':
-			return Zotero.Prefs.get("sync.storage.protocol") == 'webdav' ? 'webdav' : 'zfs';
+		case 'user': {
+			let protocol = Zotero.Prefs.get("sync.storage.protocol");
+			return (protocol == 'webdav' || protocol == 'dropbox') ? protocol : 'zfs';
+		}
 		
 		case 'publications':
 		case 'group':
@@ -93,6 +95,7 @@ Zotero.Sync.Storage.Local = {
 		
 		switch (mode) {
 		case 'webdav':
+		case 'dropbox':
 		case 'zfs':
 			Zotero.Prefs.set("sync.storage.protocol", mode);
 			break;
