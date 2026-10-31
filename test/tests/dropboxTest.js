@@ -658,6 +658,17 @@ describe("Zotero.Sync.Storage.Mode.Dropbox", function () {
 			assert.isTrue(await dropbox.isConnected());
 		});
 		
+		it("should explain a rejected authorization code", async function () {
+			var { url, verifier } = await dropbox.startAuthorization({ manual: true });
+			fake.codeChallenge = new URL(url).searchParams.get('code_challenge');
+			var e = await getPromiseError(dropbox.completeAuthorization("wrong-code", verifier, null));
+			assert.equal(
+				e.message,
+				Zotero.ftl.formatValueSync('sync-storage-dropbox-error-authorization-failed')
+			);
+			assert.isFalse(await dropbox.isConnected());
+		});
+		
 		it("should ignore a redirect for a different authorization", async function () {
 			var { codePromise } = await dropbox.startAuthorization();
 			var redirect = `http://127.0.0.1:${Zotero.Prefs.get('httpServer.port')}`

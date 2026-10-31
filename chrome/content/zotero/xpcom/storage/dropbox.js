@@ -425,7 +425,22 @@ Zotero.Sync.Storage.Dropbox = {
 		if (redirectURI) {
 			params.redirect_uri = redirectURI;
 		}
-		var json = await this._tokenRequest(params, { errorDelayMax: 0 });
+		var json;
+		try {
+			json = await this._tokenRequest(params, { errorDelayMax: 0 });
+		}
+		catch (e) {
+			// E.g., a mistyped or expired code, or an app key for a different app
+			if (e instanceof this.APIError && e.status == 400) {
+				Zotero.logError(e);
+				throw new Zotero.Error(
+					Zotero.ftl.formatValueSync('sync-storage-dropbox-error-authorization-failed'),
+					0,
+					{ dialogButtonText: null }
+				);
+			}
+			throw e;
+		}
 		if (!json.refresh_token) {
 			throw new Error("Refresh token not returned by Dropbox");
 		}
