@@ -6,16 +6,17 @@ set -euo pipefail
 #
 # Runs on Linux or macOS. Packages are written to app/dist-achmage/:
 #
-#   Zotero-<version>_win-x64.zip          Portable app -- extract and run zotero.exe
+#   Zotero-<version>_x64_setup.exe        Windows installer
 #   Zotero-<version>_mac.zip              Zotero.app, signed ad hoc
 #   Zotero-<version>_linux-x86_64.tar.xz
 #
 # where <version> is the Zotero version with an "-achmage.N+<commit>" suffix.
 #
 # Requirements: Node, zip, unzip, 7z (7-Zip 22 or later, to read the Firefox disk image), rsync,
-# perl, python3, xz, curl, and Git LFS checkouts. On Linux, macOS packages also need rcodesign
-# (https://github.com/indygreg/apple-platform-rs). If wine and rcedit are available (see
-# fetch_rcedit), the Windows executable gets the Achmage Edition icon.
+# perl, python3, xz, curl, and Git LFS checkouts. The Windows installer needs NSIS 3 (makensis) or
+# Wine, which runs the Windows version of NSIS. On Linux, macOS packages also need rcodesign
+# (https://github.com/indygreg/apple-platform-rs). If Wine is available, the Windows executables
+# get the Achmage Edition icon.
 #
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -106,28 +107,126 @@ function install_window_icons {
 	cp "$APP_ROOT_DIR/branding/window-icons/"* "$app_dir/chrome/icons/default/"
 }
 
+# Download a file and verify its SHA-256 checksum
+function fetch_checked {
+	local url=$1
+	local file=$2
+	local sha256=$3
+	mkdir -p "$(dirname "$file")"
+	curl -fsSL -o "$file.part" "$url"
+	if ! echo "$sha256  $file.part" | sha256sum -c --status -; then
+		echo "Checksum mismatch for $url" >&2
+		rm "$file.part"
+		exit 1
+	fi
+	mv "$file.part" "$file"
+}
+
+# Run a Windows program with Wine, without a display so that Wine's first-run setup doesn't open
+# windows
+function run_wine {
+	local prefix="$APP_ROOT_DIR/xulrunner/wineprefix"
+	mkdir -p "$prefix"
+	env -u DISPLAY -u WAYLAND_DISPLAY \
+		WINEPREFIX="$prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" \
+		timeout 600 wine "$@"
+}
+
 # Replace the icon resource used by Explorer and shortcuts
 function set_windows_exe_icon {
 	local exe=$1
+	local name
+	name=$(basename "$exe")
 	local rcedit="$APP_ROOT_DIR/xulrunner/bin/rcedit-x64.exe"
 	if ! command -v wine > /dev/null; then
-		echo "wine not found -- leaving the zotero.exe icon unchanged"
+		echo "wine not found -- leaving the $name icon unchanged"
 		return
 	fi
 	if [ ! -e "$rcedit" ]; then
-		mkdir -p "$(dirname "$rcedit")"
-		curl -fsSL -o "$rcedit" https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe
+		fetch_checked https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe \
+			"$rcedit" 3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a
 	fi
-	local prefix="$APP_ROOT_DIR/xulrunner/wineprefix"
-	mkdir -p "$prefix"
-	# Without a display, so that Wine's first-run setup doesn't open windows
-	if env -u DISPLAY -u WAYLAND_DISPLAY \
-			WINEPREFIX="$prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" \
-			timeout 300 wine "$rcedit" "$exe" --set-icon "$APP_ROOT_DIR/win/zotero.ico"; then
-		echo "Set zotero.exe icon"
+	if run_wine "$rcedit" "$exe" --set-icon "$APP_ROOT_DIR/win/zotero.ico"; then
+		echo "Set $name icon"
 	else
-		echo "Couldn't set the zotero.exe icon -- leaving it unchanged"
+		echo "Couldn't set the $name icon -- leaving it unchanged"
 	fi
+}
+
+NSIS_VERSION=3.13
+
+# makensis from NSIS 3 for this system, or the Windows version under Wine
+function run_makensis {
+	if command -v makensis > /dev/null; then
+		makensis "$@"
+		return
+	fi
+	if ! command -v wine > /dev/null; then
+		echo "The Windows installer needs NSIS 3 (makensis) or Wine" >&2
+		exit 1
+	fi
+	local nsis_dir="$APP_ROOT_DIR/xulrunner/nsis-$NSIS_VERSION"
+	if [ ! -e "$nsis_dir/makensis.exe" ]; then
+		local zip_file="$APP_ROOT_DIR/xulrunner/nsis-$NSIS_VERSION.zip"
+		fetch_checked "https://downloads.sourceforge.net/project/nsis/NSIS%203/$NSIS_VERSION/nsis-$NSIS_VERSION.zip" \
+			"$zip_file" ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8
+		unzip -q "$zip_file" -d "$APP_ROOT_DIR/xulrunner"
+		rm "$zip_file"
+	fi
+	run_wine "$nsis_dir/makensis.exe" "$@"
+}
+
+# The plugins that the installer scripts use, from the same sources as win/download-nsis-plugins
+function fetch_nsis_plugins {
+	local dir=$1
+	if [ -e "$dir/nsProcess.dll" ]; then
+		return
+	fi
+	local url="https://hg.mozilla.org/mozilla-central/raw-file/052d53200cf8/other-licenses/nsis/Plugins"
+	fetch_checked "$url/ApplicationID.dll" "$dir/ApplicationID.dll" \
+		096e40b3fd5803f323660b2687946d4d6ad004e84b27ab67d4f60707358ee375
+	fetch_checked "$url/ShellLink.dll" "$dir/ShellLink.dll" \
+		5d103419245e2a5f124a96cace25d6836b2398edc0aa3919829b0fd6ad8b5d6a
+	fetch_checked "$url/UAC.dll" "$dir/UAC.dll" \
+		0d21041a1b5cd9f9968fc1d457c78a802c9c5a23f375327e833501b65bcd095d
+	# A 7-Zip archive, despite the name
+	fetch_checked https://download.zotero.org/dev/win/NsProcess-1.6.zip "$dir/NsProcess.zip" \
+		fc19fc66a5219a233570fafd5daeb0c9b85387b379f6df5ac8898159a57c5944
+	7z e -y -o"$dir" "$dir/NsProcess.zip" Plugin/nsProcessW.dll > /dev/null
+	rm "$dir/NsProcess.zip"
+	mv "$dir/nsProcessW.dll" "$dir/nsProcess.dll"
+}
+
+# Build the installer as build.sh does on Windows: a 7-Zip self-extractor that runs the NSIS
+# setup.exe on the app, which includes the uninstaller
+function build_windows_installer {
+	local app_dir=$1
+	local installer=$2
+	local dir="$work_dir/win_installer"
+	rm -rf "$dir"
+	cp -r "$APP_ROOT_DIR/win/installer" "$dir"
+	perl -pi -e "s/\{\{VERSION}}/$version/" "$dir/defines.nsi"
+	cp "$APP_ROOT_DIR/win/zotero.ico" "$dir/setup.ico"
+	fetch_nsis_plugins "$APP_ROOT_DIR/xulrunner/nsis-plugins"
+	cp "$APP_ROOT_DIR/xulrunner/nsis-plugins/"*.dll "$dir"
+
+	# The scripts were written for the Unicode version of NSIS 2, so make NSIS 3 build Unicode
+	# installers. They're passed as relative paths, since makensis.exe would take an absolute
+	# path from Linux or macOS for an option.
+	(cd "$dir" && run_makensis "-XUnicode true" -DHAVE_64BIT_BUILD -V1 uninstaller.nsi)
+	mkdir -p "$app_dir/uninstall"
+	mv "$dir/helper.exe" "$app_dir/uninstall/"
+	(cd "$dir" && run_makensis "-XUnicode true" -DHAVE_64BIT_BUILD -V1 installer.nsi)
+
+	mkdir "$dir/staging"
+	cp -r "$app_dir" "$dir/staging/core"
+	mv "$dir/setup.exe" "$dir/staging/"
+	(cd "$dir/staging" && 7z a -r -t7z "$dir/app.7z" \
+		-mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3 > /dev/null)
+	local sfx="$dir/7zstub/firefox/7zSD.sfx"
+	set_windows_exe_icon "$sfx"
+	cat "$sfx" "$dir/app.tag" "$dir/app.7z" > "$installer"
+	chmod 755 "$installer"
 }
 
 function sign_mac_app {
@@ -149,7 +248,8 @@ OUT_DIR="$APP_ROOT_DIR/dist-achmage"
 
 hash=$(git -C "$ROOT_DIR" rev-parse --short HEAD)
 build_dir=$(mktemp -d)
-trap 'rm -rf "$build_dir"' EXIT
+work_dir=$(mktemp -d)
+trap 'rm -rf "$build_dir" "$work_dir"' EXIT
 
 "$SCRIPT_DIR/prepare_build" -s "$ROOT_DIR/build" -o "$build_dir" -c "$VERSION_CHANNEL" -m "$hash"
 version=$(cat "$build_dir/version")
@@ -163,9 +263,8 @@ for (( i=0; i<${#platforms}; i++ )); do
 			stage="$STAGE_DIR/Zotero_win-x64"
 			install_window_icons "$stage/app"
 			set_windows_exe_icon "$stage/zotero.exe"
-			package="$OUT_DIR/Zotero-${version}_win-x64.zip"
-			rm -f "$package"
-			(cd "$STAGE_DIR" && zip -rqX "$package" Zotero_win-x64)
+			package="$OUT_DIR/Zotero-${version}_x64_setup.exe"
+			build_windows_installer "$stage" "$package"
 			;;
 
 		m)

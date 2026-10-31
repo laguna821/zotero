@@ -4,7 +4,7 @@ Zotero에 Dropbox 파일 동기화, 가독성 스킨, Achmage Edition 표시를 
 
 공식 Zotero와 같은 프로필·데이터 폴더를 쓰므로 기존 로그인, 설정, 플러그인이 그대로 이어집니다. 두 앱을 동시에 실행하지 말고, 이 빌드를 쓰는 컴퓨터에서는 공식 Zotero 대신 이 빌드만 쓰세요.
 
-- **Windows**: `…_win-x64.zip`을 풀어 `zotero.exe`를 실행합니다(예: `%LOCALAPPDATA%\Programs\Zotero Achmage`에 두고 바로 가기 만들기). 처음 실행할 때 SmartScreen이 막으면 **추가 정보 → 실행**을 누릅니다.
+- **Windows**: `…_x64_setup.exe`를 실행해 설치합니다. 공식 Zotero와 같은 곳(`C:\Program Files\Zotero`)에 설치되어 공식 Zotero를 대신하고, 시작 메뉴 바로 가기와 **설정 → 앱**의 제거 항목도 만들어집니다. 코드 서명이 없는 빌드라 SmartScreen이 막으면 **추가 정보 → 실행**을 누릅니다. 예전 zip을 풀어 쓰던 폴더와 그 바로 가기는 설치 후 지워도 됩니다(데이터와 설정은 그 폴더에 없습니다).
 - **macOS**: `…_mac.zip`을 풀어 `Zotero.app`을 `응용 프로그램`으로 옮긴 뒤 터미널에서 한 번 실행합니다.
   `xattr -dr com.apple.quarantine /Applications/Zotero.app`
   Apple 공증을 받지 않은 빌드라 이 단계가 필요합니다.

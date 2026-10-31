@@ -25,11 +25,11 @@ npm ci
 app/scripts/fork_build          # -p w, -p m, -p l 로 플랫폼 선택
 ```
 
-필요한 것: Node 22, zip·unzip, 7-Zip 22 이상(`7z`), rsync, perl, python3, xz, curl, Git LFS. Linux에서 macOS 설치본을 만들려면 [rcodesign](https://github.com/indygreg/apple-platform-rs)도 필요합니다. wine이 있으면 `zotero.exe`에도 Achmage 아이콘을 넣습니다.
+필요한 것: Node 22, zip·unzip, 7-Zip 22 이상(`7z`), rsync, perl, python3, xz, curl, Git LFS. Windows 설치 프로그램에는 NSIS 3(`makensis`)이나 Wine이 필요합니다(Wine만 있으면 Windows용 NSIS를 내려받아 실행). Linux에서 macOS 설치본을 만들려면 [rcodesign](https://github.com/indygreg/apple-platform-rs)도 필요합니다. Wine이 있으면 `zotero.exe`와 설치 프로그램에도 Achmage 아이콘을 넣습니다.
 
 결과는 `app/dist-achmage/`에 생깁니다.
 
-- Windows: 설치 프로그램 대신 압축을 풀어 쓰는 포터블 zip (NSIS 설치 프로그램은 Windows에서만 만들 수 있음)
+- Windows: `…_x64_setup.exe` 설치 프로그램. 공식 Zotero와 같은 곳(`C:\Program Files\Zotero`)에 설치되어 공식 Zotero를 대신합니다.
 - macOS: 임시(ad hoc) 서명한 `Zotero.app` zip. Apple 공증이 없으므로 설치 후 `xattr -dr com.apple.quarantine`가 필요합니다.
 - Linux: tar.xz
 
@@ -40,6 +40,7 @@ app/scripts/fork_build          # -p w, -p m, -p l 로 플랫폼 선택
 - Firefox macOS 런타임은 디스크 이미지(DMG)라 Linux에서 마운트할 수 없습니다. `fork_build`가 Mozilla 체크섬을 확인한 뒤 7-Zip으로 풀어 `fetch_xulrunner`가 쓰는 zip을 만듭니다.
 - macOS용 `codesign` 대신 `rcodesign`으로 앱 전체를 임시 서명합니다. Apple Silicon은 서명 없는 앱을 실행하지 않습니다.
 - `set-channel-prefs-channel`은 Linux의 GNU `strings`로도 동작하게 고쳤습니다.
+- `build.sh`는 Windows 설치 프로그램을 Windows에서만 만듭니다. `fork_build`는 같은 `app/win/installer` 스크립트를 NSIS 3로 컴파일하고(NSIS 2 유니코드판용 스크립트라 `Unicode true`를 붙임) 공식 설치 프로그램처럼 7-Zip 자동 압축 풀기 파일로 묶습니다. 내려받는 NSIS와 플러그인은 체크섬을 확인합니다.
 
 ## 공식 업데이트를 끈 이유
 
