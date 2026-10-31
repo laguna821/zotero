@@ -137,6 +137,9 @@ function sign_mac_app {
 		xattr -cr "$app"
 		/usr/bin/codesign --force --deep --sign - "$app"
 	else
+		# rcodesign keeps the hardened runtime of Mozilla's helper apps, under which ad hoc signed
+		# libraries fail library validation, so sign unsigned files as codesign --force would
+		python3 "$SCRIPT_DIR/macho_remove_signatures" "$app"
 		rcodesign sign "$app"
 	fi
 }
