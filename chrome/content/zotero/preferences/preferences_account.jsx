@@ -979,6 +979,7 @@ Zotero_Preferences.Sync = {
 		
 		document.getElementById('storage-dropbox-connect').hidden = connected || authorizing;
 		document.getElementById('storage-dropbox-verify').hidden = !connected || authorizing;
+		document.getElementById('storage-dropbox-reconnect').hidden = !connected || authorizing;
 		document.getElementById('storage-dropbox-disconnect').hidden = !connected || authorizing;
 		document.getElementById('storage-dropbox-waiting').hidden = !authorizing;
 	},
@@ -1077,6 +1078,15 @@ Zotero_Preferences.Sync = {
 			await controller.checkServer();
 		}
 		catch (e) {
+			// An authorization keeps the permissions it was given with, so permissions turned on
+			// in the App Console afterwards, or a revoked authorization, need a new authorization
+			if (e.dropboxError == 'MISSING_SCOPE' || e.dropboxError == 'AUTH_REVOKED') {
+				if (this._promptToReconnectDropbox(e)) {
+					// Verifies again after authorizing
+					this.connectDropbox();
+				}
+				return false;
+			}
 			await controller.handleVerificationError(e, window);
 			return false;
 		}
@@ -1093,6 +1103,25 @@ Zotero_Preferences.Sync = {
 			})
 		);
 		return true;
+	},
+	
+	
+	/**
+	 * @return {Boolean} - True if the user chose to connect again
+	 */
+	_promptToReconnectDropbox: function (e) {
+		var index = Zotero.Prompt.confirm({
+			window,
+			title: Zotero.ftl.formatValueSync('preferences-sync-dropbox-reconnect-title'),
+			text: e.message + "\n\n" + Zotero.ftl.formatValueSync('preferences-sync-dropbox-reconnect-text'),
+			button0: Zotero.ftl.formatValueSync('preferences-sync-dropbox-reconnect-now'),
+			button1: Zotero.Prompt.BUTTON_TITLE_CANCEL,
+			button2: Zotero.ftl.formatValueSync('preferences-sync-dropbox-open-app-console')
+		});
+		if (index == 2) {
+			Zotero.launchURL(Zotero.Sync.Storage.Dropbox.APP_CONSOLE_URL);
+		}
+		return index == 0;
 	},
 	
 	
