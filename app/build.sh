@@ -877,6 +877,8 @@ if [ $BUILD_MAC == 1 ]; then
 			echo
 			/usr/bin/codesign --verify -vvvv "$appex"
 		done
+	elif [ -n "$custom_components_hash_mac" ] && [ $MAC_NATIVE == 0 ]; then
+		echo "Not building on Mac -- sign Zotero.app ad hoc afterwards (see scripts/fork_build)"
 	elif [ -n "$custom_components_hash_mac" ]; then
 		# Mozilla's helper apps (plugin-container, GPU helper, etc.) are signed with Mozilla's Team ID
 		# and the hardened runtime, so without our signature they can't load custom components such as
