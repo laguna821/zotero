@@ -27,6 +27,26 @@
 	fill: var(--fill-primary);
 }
 
+#achmage-edition {
+	margin: 10px 0 2px 7px;
+	padding-top: 10px;
+	border-top: 1px solid var(--fill-quinary);
+	
+	#achmage-logo {
+		height: 30px;
+		-moz-context-properties: fill;
+		fill: #002e6e;
+		
+		@media (prefers-color-scheme: dark) {
+			fill: #e9f3ff;
+		}
+	}
+	
+	p {
+		margin: 4px 0 0;
+	}
+}
+
 #version
 {
 	color: var(--fill-secondary);

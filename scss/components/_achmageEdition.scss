@@ -1,0 +1,18 @@
+// Achmage Edition branding: the wordmark in the tab bar, which opens the About dialog
+
+#zotero-tabs-toolbar #zotero-tb-achmage {
+	width: auto;
+	padding-inline: 6px;
+	list-style-image: url("chrome://zotero/skin/achmage/wordmark.svg");
+	-moz-context-properties: fill;
+	fill: #002e6e;
+	
+	.toolbarbutton-icon {
+		width: 66px;
+		height: 23px;
+	}
+	
+	@media (prefers-color-scheme: dark) {
+		fill: #e9f3ff;
+	}
+}

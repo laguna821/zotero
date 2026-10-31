@@ -1151,3 +1151,10 @@ menu-edit-undo-action = Undo { $action }
 menu-edit-redo-action = Redo { $action }
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+## Achmage Edition
+
+achmage-edition-button =
+    .tooltiptext = Achmage Edition: Dropbox 파일 동기화 · 가독성 스킨
+achmage-edition-about = { -app-name }에 Dropbox 파일 동기화와 가독성 스킨을 더한 Achmage Edition입니다.
+achmage-edition-source = 소스 코드와 새 버전

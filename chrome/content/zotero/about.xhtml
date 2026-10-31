@@ -35,6 +35,21 @@
 			}
 			document.getElementById('version').textContent = version
 		</script>
+		<div xmlns="http://www.w3.org/1999/xhtml" id="achmage-edition">
+			<img id="achmage-logo" src="chrome://zotero/skin/achmage/wordmark.svg" alt="Achmage" />
+			<p id="achmage-edition-text"></p>
+			<p><span id="achmage-edition-link" class="text-link" role="link"
+				data-href="https://github.com/laguna821/zotero/releases"></span></p>
+			<script><![CDATA[
+				document.getElementById('achmage-edition-text').textContent
+					= Zotero.ftl.formatValueSync('achmage-edition-about');
+				let achmageLink = document.getElementById('achmage-edition-link');
+				achmageLink.textContent = Zotero.ftl.formatValueSync('achmage-edition-source');
+				achmageLink.onclick = function () {
+					Zotero.launchURL(this.getAttribute('data-href'));
+				};
+			]]></script>
+		</div>
 		<vbox>
 			<div id="about-text" xmlns="http://www.w3.org/1999/xhtml">
 				<p id="created-by"></p>

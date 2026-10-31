@@ -1287,3 +1287,10 @@ menu-edit-redo-action = Redo { $action }
 
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+## Achmage Edition
+
+achmage-edition-button =
+    .tooltiptext = Achmage Edition: Dropbox file sync and readable skin
+achmage-edition-about = Achmage Edition is a custom build of { -app-name } with Dropbox file sync and a readable skin.
+achmage-edition-source = Source code and new versions
