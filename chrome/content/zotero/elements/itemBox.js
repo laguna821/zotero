@@ -166,6 +166,10 @@
 			this._prefsObserverID = Zotero.Prefs.registerObserver('fontSize', () => {
 				this._forceRenderAll();
 			});
+			// Empty fields are folded only with the readable skin
+			this._skinObserverID = Zotero.Prefs.registerObserver('readableSkin', () => {
+				this._forceRenderAll();
+			});
 			
 			this.style.setProperty('--comma-character',
 				"'" + Zotero.getString('punctuation.comma') + "'");
@@ -177,6 +181,7 @@
 			Zotero.Notifier.unregisterObserver(this._notifierID);
 
 			Zotero.Prefs.unregisterObserver(this._prefsObserverID);
+			Zotero.Prefs.unregisterObserver(this._skinObserverID);
 
 			this._id('zotero-creator-transform-menu')?.removeEventListener('popupshowing', this._handleCreatorTransformMenuShowing);
 			this._id('zotero-creator-transform-menu')?.removeEventListener('command', this._handleCreatorTransformMenuCommand);
@@ -259,9 +264,10 @@
 				return;
 			}
 			
-			// When changing items, reset truncation of creator list
+			// When changing items, reset truncation of creator list and folding of empty fields
 			if (!this._item || val.id != this._item.id) {
 				this._displayAllCreators = false;
+				this._showEmptyFields = false;
 			}
 			
 			// If switching items, save the current item first
@@ -588,6 +594,16 @@
 				}
 			}
 
+			// With the readable skin, fold empty fields in the item pane behind a row that shows
+			// them, unless the item has hardly any data yet
+			var foldEmptyFields = this.mode == 'edit'
+				&& !this._showEmptyFields
+				&& !this._extraItems.length
+				&& !this._unionFieldDescriptors
+				&& Zotero.Prefs.get('readableSkin')
+				&& this.item.getUsedFields(true).some(name => !this._isTitleField(name));
+			var foldedFields = 0;
+			
 			for (let fieldName of fieldNames) {
 				if (this._ignoreFields.includes(fieldName)) {
 					continue;
@@ -630,6 +646,13 @@
 						if (this._extraItems.length) {
 							extraFieldValues = this._extraItems.map(item => item.getField(fieldName));
 						}
+					}
+					
+					if (!val && foldEmptyFields
+							&& !this._isTitleField(fieldName)
+							&& this._visibleFields.indexOf(fieldName) == -1) {
+						foldedFields++;
+						continue;
 					}
 					
 					if (!val && !extraFieldValues.some(v => v)
@@ -868,6 +891,10 @@
 						this.addDynamicRow(userLabel, userData);
 					}
 				}
+			}
+			
+			if (foldedFields || this._showEmptyFields) {
+				this.addEmptyFieldsRow(foldedFields);
 			}
 			
 			//
@@ -1631,6 +1658,45 @@
 			rowData.textContent = Zotero.getString('general.numMore', num);
 			
 			this.addDynamicRow(rowLabel, rowData);
+		}
+		
+		/**
+		 * Add a row that shows folded empty fields, or folds them again
+		 *
+		 * @param {Integer} numFolded - Number of folded fields, or 0 if empty fields are shown
+		 */
+		addEmptyFieldsRow(numFolded) {
+			var rowLabel = document.createElement('div');
+			rowLabel.className = "meta-label";
+			
+			var rowData = document.createElement('div');
+			rowData.className = "meta-data";
+			rowData.id = 'empty-fields-label';
+			rowData.setAttribute("tabindex", 0);
+			if (numFolded) {
+				document.l10n.setAttributes(rowData, 'itembox-show-empty-fields', { count: numFolded });
+			}
+			else {
+				document.l10n.setAttributes(rowData, 'itembox-hide-empty-fields');
+			}
+			var toggle = () => {
+				this._showEmptyFields = !!numFolded;
+				this._forceRenderAll();
+			};
+			rowData.addEventListener('click', toggle);
+			rowData.addEventListener('keypress', (e) => {
+				if (["Enter", ' '].includes(e.key)) {
+					toggle();
+				}
+			});
+			
+			// Before Date Added and Modified, which always have values
+			var dateAddedRow = this._infoTable.querySelector(".meta-label-dateAdded")?.parentElement;
+			this.addDynamicRow(rowLabel, rowData, dateAddedRow);
+		}
+		
+		_isTitleField(fieldName) {
+			return fieldName == 'title' || Zotero.ItemFields.isFieldOfBase(fieldName, 'title');
 		}
 		
 		addDateRow(field, value, extraFieldValues) {

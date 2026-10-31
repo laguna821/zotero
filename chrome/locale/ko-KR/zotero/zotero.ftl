@@ -1151,3 +1151,8 @@ menu-edit-undo-action = Undo { $action }
 menu-edit-redo-action = Redo { $action }
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+menu-view-readable-skin =
+    .label = 가독성 스킨
+itembox-show-empty-fields = 빈 필드 { $count }개 보기
+itembox-hide-empty-fields = 빈 필드 숨기기

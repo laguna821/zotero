@@ -1,0 +1,200 @@
+@use "sass:map";
+
+// Readable skin
+//
+// Calmer, warmer surfaces and a clearer hierarchy of title, byline, and supporting text,
+// applied while View → Readable Skin (the readableSkin pref) is on. Only colors, fonts, and
+// weights change: the virtualized trees compute row heights from the font size and density
+// settings, so nothing here may change the size of rows in those trees.
+
+@font-face {
+	font-family: "Zotero Pretendard";
+	src: url("chrome://zotero/skin/fonts/PretendardVariable.woff2") format("woff2");
+	font-weight: 45 920;
+	font-style: normal;
+	font-display: swap;
+}
+
+$-readable-tags: (
+	tag-blue: #2ea8e5,
+	tag-gray: #aaa,
+	tag-green: #5fb236,
+	tag-indigo: #576dd9,
+	tag-magenta: #e56eee,
+	tag-orange: #f19837,
+	tag-plum: #a6507b,
+	tag-purple: #a28ae5,
+	tag-red: #ff6666,
+	tag-teal: #009980,
+	tag-yellow: #ffd400,
+);
+
+$-readable-light: map.merge((
+	accent-azure: #66adff,
+	accent-blue: #4072e5,
+	accent-blue10: #4072e51a,
+	accent-blue30: #4072e54d,
+	accent-blue50: #4072e580,
+	accent-gold: #cc9200,
+	accent-green: #39bf68,
+	accent-orange: #ff794c,
+	accent-red: #db2c3a,
+	accent-teal: #59adc4,
+	accent-white: #fff,
+	accent-wood-dark: #996b6f,
+	accent-wood: #cc7a52,
+	accent-yellow: #faa700,
+	accent-highlight: #ffea0080,
+	// Warm near-black instead of pure black
+	fill-primary: #1d1a16e6,
+	fill-secondary: #1d1a169e,
+	fill-tertiary: #1d1a1647,
+	fill-quarternary: #1d1a161c,
+	fill-quinary: #1d1a160e,
+	fill-senary: #1d1a1606,
+	// Paper-like surfaces
+	color-background: #fdfcf9,
+	color-background30: #fdfcf94d,
+	color-background50: #fdfcf980,
+	color-background70: #fdfcf9b2,
+	color-border: #1d1a1626,
+	color-border50: #1d1a1614,
+	color-button: #fffefb,
+	color-control: #fffefb,
+	color-invalid: #b81d29,
+	color-invalid-background: #fce8ea,
+	color-menu: #f7f5f0b8,
+	color-panedivider: #e3ddd3,
+	color-sidepane: #f4f1eb,
+	color-tabbar: #ece8e0,
+	color-toolbar: #f8f6f1,
+	color-scrollbar: rgb(196, 190, 181),
+	color-scrollbar-hover: rgb(130, 123, 113),
+	color-scrollbar-background: transparent,
+	color-stripe: #1d1a1608,
+), $-readable-tags);
+
+$-readable-dark: map.merge((
+	accent-azure: #66adffd9,
+	accent-blue: #4072e5,
+	accent-blue10: #4072e54d,
+	accent-blue30: #4072e573,
+	accent-blue50: #4072e599,
+	accent-gold: #cc9200d9,
+	accent-green: #39bf68d9,
+	accent-orange: #ff794cd9,
+	accent-red: #db2c3ae5,
+	accent-teal: #59adc4e5,
+	accent-white: #fff,
+	accent-wood-dark: #996b6f,
+	accent-wood: #cc7a52e5,
+	accent-yellow: #faa700cc,
+	accent-highlight: #ffd40026,
+	fill-primary: #fbf6efe6,
+	fill-secondary: #fbf6ef91,
+	fill-tertiary: #fbf6ef4d,
+	fill-quarternary: #fbf6ef1f,
+	fill-quinary: #fbf6ef0f,
+	fill-senary: #fbf6ef08,
+	// Warm charcoal surfaces
+	color-background: #1d1b19,
+	color-background30: #1d1b194d,
+	color-background50: #1d1b1980,
+	color-background70: #1d1b19b2,
+	color-border: #fbf6ef2e,
+	color-border50: #fbf6ef17,
+	color-button: #3d3935,
+	color-control: #ccc,
+	color-invalid: #ff7078,
+	color-invalid-background: #40191c,
+	color-menu: #2a272494,
+	color-panedivider: #3d3934,
+	color-sidepane: #282522,
+	color-tabbar: #1a1816,
+	color-toolbar: #24221f,
+	color-scrollbar: rgb(120, 114, 106),
+	color-scrollbar-hover: rgb(160, 153, 144),
+	color-scrollbar-background: transparent,
+	color-stripe: #fbf6ef0d,
+), $-readable-tags);
+
+@media (prefers-color-scheme: light) {
+	:root[readableSkin] {
+		@include derive-colors($-readable-light);
+		// A muted Zotero red for selection, dark enough for the white icons of selected rows
+		--color-accent: #a8443b;
+		--color-accent-text: #fff;
+		--readable-accent-on-tint: #8f3a32;
+		--readable-accent-tint: #a8443b29;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root[readableSkin] {
+		@include derive-colors($-readable-dark);
+		--color-accent: #b5544a;
+		--color-accent-text: #fff;
+		--readable-accent-on-tint: #f0a59b;
+		--readable-accent-tint: #b5544a38;
+	}
+}
+
+:root[readableSkin] {
+	// An installed Pretendard first, then the bundled copy, then the platform's Korean UI font
+	font-family: "Pretendard Variable", Pretendard, "Zotero Pretendard", "Apple SD Gothic Neo",
+		"Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif;
+	
+	// Items list: the title carries each row and the other columns recede
+	#zotero-items-tree .virtualized-table {
+		.row .cell.primary .cell-text {
+			font-weight: 500;
+		}
+		
+		.row:not(.selected, .context-row) .cell:not(.primary, .hasAttachment, .numNotes) {
+			color: var(--fill-secondary);
+		}
+	}
+	
+	.virtualized-table-header .cell .label {
+		color: var(--fill-secondary);
+		font-weight: 500;
+	}
+	
+	// Collections: the current collection stays visible as a place after focus moves to the
+	// items list
+	#zotero-collections-tree .virtualized-table:not(:focus-within) .row.selected {
+		background-color: var(--readable-accent-tint);
+		color: var(--readable-accent-on-tint);
+		font-weight: 600;
+	}
+	
+	// Wrap Korean text between words rather than between syllables
+	#zotero-item-pane, #zotero-context-pane {
+		word-break: keep-all;
+		overflow-wrap: break-word;
+	}
+	
+	// Item pane: title, then byline, then labeled sections
+	item-pane-header .head-container .title-head {
+		.title {
+			font-size: 1.154em;
+			font-weight: 650;
+			line-height: 1.35;
+		}
+		
+		.creator-year {
+			margin-top: 2px;
+		}
+	}
+	
+	collapsible-section > .head .title-box .title {
+		color: var(--fill-primary);
+		font-weight: 650;
+	}
+	
+	abstract-box .body editable-text {
+		line-height: 1.65;
+	}
+	
+	// Notes and the reader keep their own document fonts; only the app chrome changes
+}

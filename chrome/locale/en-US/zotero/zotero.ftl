@@ -1287,3 +1287,11 @@ menu-edit-redo-action = Redo { $action }
 
 local-api-authorize-title = Local API Authorization
 local-api-authorize-text = “{ $appName }”, an application running on your computer, wants to modify your { -app-name } library.
+
+menu-view-readable-skin =
+    .label = Readable Skin
+itembox-show-empty-fields = { $count ->
+    [one] Show { $count } Empty Field
+   *[other] Show { $count } Empty Fields
+}
+itembox-hide-empty-fields = Hide Empty Fields

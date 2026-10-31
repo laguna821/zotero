@@ -82,6 +82,7 @@ pref("extensions.zotero.fallbackSort", "firstCreator,date,title,dateAdded");
 pref("extensions.zotero.sortCreatorAsString", false);
 
 pref("extensions.zotero.uiDensity", "comfortable");
+pref("extensions.zotero.readableSkin", true);
 
 pref("extensions.zotero.itemPaneHeader", "title");
 pref("extensions.zotero.itemPaneHeader.bibEntry.style", "http://www.zotero.org/styles/apa");
