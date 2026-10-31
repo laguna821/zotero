@@ -1137,6 +1137,11 @@ const { CommandLineOptions } = ChromeUtils.importESModule("chrome://zotero/conte
 	
 	
 	this.openCheckForUpdatesWindow = function ({ modal } = {}) {
+		// This fork doesn't take updates from zotero.org, which would replace it with stock Zotero
+		if (ZOTERO_CONFIG.FORK_RELEASES_URL) {
+			Zotero.launchURL(ZOTERO_CONFIG.FORK_RELEASES_URL);
+			return;
+		}
 		let win = Services.wm.getMostRecentWindow('Update:Wizard');
 		if (win) {
 			win.focus();

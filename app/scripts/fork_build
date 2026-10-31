@@ -1,0 +1,196 @@
+#!/bin/bash
+set -euo pipefail
+
+#
+# Build the Achmage Edition packages for Windows, macOS, and Linux
+#
+# Runs on Linux or macOS. Packages are written to app/dist-achmage/:
+#
+#   Zotero-<version>_win-x64.zip          Portable app -- extract and run zotero.exe
+#   Zotero-<version>_mac.zip              Zotero.app, signed ad hoc
+#   Zotero-<version>_linux-x86_64.tar.xz
+#
+# where <version> is the Zotero version with an "-achmage.N+<commit>" suffix.
+#
+# Requirements: Node, zip, unzip, 7z (7-Zip 22 or later, to read the Firefox disk image), rsync,
+# perl, python3, xz, curl, and Git LFS checkouts. On Linux, macOS packages also need rcodesign
+# (https://github.com/indygreg/apple-platform-rs). If wine and rcedit are available (see
+# fetch_rcedit), the Windows executable gets the Achmage Edition icon.
+#
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="$(dirname "$APP_ROOT_DIR")"
+. "$APP_ROOT_DIR/config.sh"
+. "$SCRIPT_DIR/utils.sh"
+
+# Version suffix, e.g., 10.0.7-achmage.1+abcdef123
+VERSION_CHANNEL="achmage"
+# Update channel built into the app. Updates from zotero.org are disabled by leaving the update URL
+# out of application.ini, so this only has to be a channel that the macOS ChannelPrefs patch
+# accepts.
+UPDATE_CHANNEL="release"
+
+function usage {
+	cat >&2 <<DONE
+Usage: $0 [-p PLATFORMS] [-j]
+
+Options
+ -p PLATFORMS        platforms to build (w=Windows, m=Mac, l=Linux; default: wml)
+ -j                  skip the JS build (use the existing build/ directory)
+DONE
+	exit 1
+}
+
+platforms="wml"
+skip_js=0
+while getopts "p:jh" opt; do
+	case $opt in
+		p)
+			platforms="$OPTARG"
+			;;
+		j)
+			skip_js=1
+			;;
+		*)
+			usage
+			;;
+	esac
+done
+
+if [[ ! $platforms =~ ^[wml]+$ ]]; then
+	usage
+fi
+
+cd "$ROOT_DIR"
+
+if [ $skip_js -eq 0 ]; then
+	echo "Building JS"
+	NODE_OPTIONS=--openssl-legacy-provider node js-build/build.js
+	echo
+fi
+
+# fetch_xulrunner gets Firefox for macOS from a disk image, which can only be mounted on macOS, but
+# it uses "Firefox <version>.app.zip" instead if it exists, so on other systems create that from the
+# disk image with 7-Zip
+function prepare_mac_runtime {
+	local xulrunner_dir="$APP_ROOT_DIR/xulrunner"
+	local zip_file="$xulrunner_dir/Firefox $GECKO_VERSION_MAC.app.zip"
+	if [ -e "$zip_file" ]; then
+		return
+	fi
+	echo "Extracting Firefox $GECKO_VERSION_MAC for macOS from disk image"
+	local tmp
+	tmp=$(mktemp -d)
+	local url="https://ftp.mozilla.org/pub/firefox/releases/$GECKO_VERSION_MAC"
+	curl -fsSL -o "$tmp/Firefox.dmg" "$url/mac/en-US/Firefox%20$GECKO_VERSION_MAC.dmg"
+	curl -fsSL -o "$tmp/SHA256SUMS" "$url/SHA256SUMS"
+	local expected
+	expected=$(grep " mac/en-US/Firefox $GECKO_VERSION_MAC.dmg$" "$tmp/SHA256SUMS" | cut -d' ' -f1)
+	if [ -z "$expected" ]; then
+		echo "Checksum for Firefox $GECKO_VERSION_MAC disk image not found" >&2
+		exit 1
+	fi
+	echo "$expected  $tmp/Firefox.dmg" | sha256sum -c -
+	7z x -snl -o"$tmp/dmg" "$tmp/Firefox.dmg" > /dev/null
+	mkdir -p "$xulrunner_dir"
+	(cd "$tmp/dmg/Firefox" && zip -qry "$zip_file" Firefox.app)
+	rm -rf "$tmp"
+	echo
+}
+
+# Firefox uses icons in <app>/chrome/icons/default/ for its windows
+function install_window_icons {
+	local app_dir=$1
+	mkdir -p "$app_dir/chrome/icons/default"
+	cp "$APP_ROOT_DIR/branding/window-icons/"* "$app_dir/chrome/icons/default/"
+}
+
+# Replace the icon resource used by Explorer and shortcuts
+function set_windows_exe_icon {
+	local exe=$1
+	local rcedit="$APP_ROOT_DIR/xulrunner/bin/rcedit-x64.exe"
+	if ! command -v wine > /dev/null; then
+		echo "wine not found -- leaving the zotero.exe icon unchanged"
+		return
+	fi
+	if [ ! -e "$rcedit" ]; then
+		mkdir -p "$(dirname "$rcedit")"
+		curl -fsSL -o "$rcedit" https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe
+	fi
+	local prefix="$APP_ROOT_DIR/xulrunner/wineprefix"
+	mkdir -p "$prefix"
+	# Without a display, so that Wine's first-run setup doesn't open windows
+	if env -u DISPLAY -u WAYLAND_DISPLAY \
+			WINEPREFIX="$prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" \
+			timeout 300 wine "$rcedit" "$exe" --set-icon "$APP_ROOT_DIR/win/zotero.ico"; then
+		echo "Set zotero.exe icon"
+	else
+		echo "Couldn't set the zotero.exe icon -- leaving it unchanged"
+	fi
+}
+
+function sign_mac_app {
+	local app=$1
+	echo "Signing $app ad hoc"
+	if [[ "$(uname)" = "Darwin" ]]; then
+		xattr -cr "$app"
+		/usr/bin/codesign --force --deep --sign - "$app"
+	else
+		# rcodesign keeps the hardened runtime of Mozilla's helper apps, under which ad hoc signed
+		# libraries fail library validation, so sign unsigned files as codesign --force would
+		python3 "$SCRIPT_DIR/macho_remove_signatures" "$app"
+		rcodesign sign "$app"
+	fi
+}
+
+# build.sh recreates its dist directory on every run, so collect packages separately
+OUT_DIR="$APP_ROOT_DIR/dist-achmage"
+
+hash=$(git -C "$ROOT_DIR" rev-parse --short HEAD)
+build_dir=$(mktemp -d)
+trap 'rm -rf "$build_dir"' EXIT
+
+"$SCRIPT_DIR/prepare_build" -s "$ROOT_DIR/build" -o "$build_dir" -c "$VERSION_CHANNEL" -m "$hash"
+version=$(cat "$build_dir/version")
+mkdir -p "$OUT_DIR"
+
+# build.sh clears the staging directory each time, so package each platform right after staging it
+for (( i=0; i<${#platforms}; i++ )); do
+	case ${platforms:i:1} in
+		w)
+			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p w -a x64 -c "$UPDATE_CHANNEL" -s
+			stage="$STAGE_DIR/Zotero_win-x64"
+			install_window_icons "$stage/app"
+			set_windows_exe_icon "$stage/zotero.exe"
+			package="$OUT_DIR/Zotero-${version}_win-x64.zip"
+			rm -f "$package"
+			(cd "$STAGE_DIR" && zip -rqX "$package" Zotero_win-x64)
+			;;
+
+		m)
+			if [[ "$(uname)" != "Darwin" ]]; then
+				prepare_mac_runtime
+			fi
+			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p m -c "$UPDATE_CHANNEL" -s
+			sign_mac_app "$STAGE_DIR/Zotero.app"
+			package="$OUT_DIR/Zotero-${version}_mac.zip"
+			rm -f "$package"
+			(cd "$STAGE_DIR" && zip -rqyX "$package" Zotero.app)
+			;;
+
+		l)
+			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p l -a x64 -c "$UPDATE_CHANNEL" -s
+			stage="$STAGE_DIR/Zotero_linux-x86_64"
+			install_window_icons "$stage/app"
+			package="$OUT_DIR/Zotero-${version}_linux-x86_64.tar.xz"
+			rm -f "$package"
+			tar -C "$STAGE_DIR" -cJf "$package" Zotero_linux-x86_64
+			;;
+	esac
+	echo "Created $package"
+	echo
+done
+
+(cd "$OUT_DIR" && sha256sum Zotero-"${version}"_* > "SHA256SUMS-${version}")
+echo "Done: $OUT_DIR"

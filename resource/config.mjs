@@ -32,5 +32,7 @@ export var ZOTERO_CONFIG = {
 	DICTIONARIES_URL: 'https://download.zotero.org/dictionaries/',
 	PLUGINS_URL: 'https://www.zotero.org/support/plugins',
 	NEW_FEATURES_URL: 'https://www.zotero.org/blog/zotero-{version}/',
-	READ_ALOUD_URL: 'https://www.zotero.org/settings/readaloud'
+	READ_ALOUD_URL: 'https://www.zotero.org/settings/readaloud',
+	// Achmage Edition: where Help → Check for Updates leads, since updates from zotero.org are off
+	FORK_RELEASES_URL: 'https://github.com/laguna821/zotero/releases',
 };

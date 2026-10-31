@@ -1,11 +1,8 @@
 name: CI
+# Achmage Edition: run the full test suite only on request, so that pushes to this fork don't start
+# six test jobs (and their notifications) each time
 on:
-  push:
-  pull_request:
   workflow_dispatch:
-  schedule:
-    # Monthly, to catch runner image and OS changes
-    - cron: '0 6 1 * *'
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true

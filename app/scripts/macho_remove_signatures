@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+"""
+Remove code signatures from the Mach-O files in a directory, like `codesign --remove-signature`
+
+Used before signing a macOS app ad hoc with rcodesign on other systems: rcodesign keeps the flags
+and entitlements of existing signatures, so Mozilla's helper apps would keep the hardened runtime,
+whose library validation rejects ad hoc signed libraries. `codesign --force --sign -` on macOS
+drops them, and so does signing unsigned files.
+
+Usage: macho_remove_signatures DIRECTORY
+"""
+import os
+import struct
+import sys
+
+MH_MAGIC_64 = 0xfeedfacf
+FAT_MAGIC = 0xcafebabe
+LC_SEGMENT_64 = 0x19
+LC_CODE_SIGNATURE = 0x1d
+CPU_TYPE_ARM64 = 0x0100000c
+
+
+def strip_thin(data):
+    """Return a 64-bit Mach-O without its code signature, or None if it has none"""
+    magic, cputype, _, _, ncmds, sizeofcmds = struct.unpack_from('<IiiIII', data, 0)
+    if magic != MH_MAGIC_64:
+        raise ValueError("Not a 64-bit Mach-O file")
+    header_size = 32
+    commands = []
+    offset = header_size
+    for _ in range(ncmds):
+        cmd, cmdsize = struct.unpack_from('<II', data, offset)
+        commands.append((offset, cmd, cmdsize))
+        offset += cmdsize
+    signature = [c for c in commands if c[1] == LC_CODE_SIGNATURE]
+    if not signature:
+        return None
+    sig_offset, _, sig_size = signature[0]
+    dataoff, datasize = struct.unpack_from('<II', data, sig_offset + 8)
+    if dataoff + datasize > len(data):
+        raise ValueError("Code signature extends past the end of the file")
+
+    out = bytearray(data[:dataoff])
+
+    # Remove the load command, keeping the following ones contiguous
+    commands_end = header_size + sizeofcmds
+    out[sig_offset:commands_end - sig_size] = data[sig_offset + sig_size:commands_end]
+    out[commands_end - sig_size:commands_end] = bytes(sig_size)
+    struct.pack_into('<II', out, 16, ncmds - 1, sizeofcmds - sig_size)
+
+    # The signature is at the end of __LINKEDIT, so shrink the segment to end before it
+    page_size = 0x4000 if cputype == CPU_TYPE_ARM64 else 0x1000
+    offset = header_size
+    for _ in range(ncmds - 1):
+        cmd, cmdsize = struct.unpack_from('<II', out, offset)
+        if cmd == LC_SEGMENT_64 and out[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
+            fileoff = struct.unpack_from('<Q', out, offset + 40)[0]
+            filesize = dataoff - fileoff
+            vmsize = (filesize + page_size - 1) // page_size * page_size
+            struct.pack_into('<Q', out, offset + 32, vmsize)
+            struct.pack_into('<Q', out, offset + 48, filesize)
+        offset += cmdsize
+    return bytes(out)
+
+
+def strip_fat(data):
+    nfat_arch = struct.unpack_from('>I', data, 4)[0]
+    archs = [struct.unpack_from('>iiIII', data, 8 + i * 20) for i in range(nfat_arch)]
+    slices = []
+    changed = False
+    for _, _, offset, size, _ in archs:
+        stripped = strip_thin(data[offset:offset + size])
+        changed = changed or stripped is not None
+        slices.append(stripped if stripped is not None else data[offset:offset + size])
+    if not changed:
+        return None
+    # Keep the original slice offsets, which are aligned, and shorten each slice
+    out = bytearray(max(arch[2] + len(piece) for arch, piece in zip(archs, slices)))
+    out[:8 + nfat_arch * 20] = data[:8 + nfat_arch * 20]
+    for i, (arch, piece) in enumerate(zip(archs, slices)):
+        out[arch[2]:arch[2] + len(piece)] = piece
+        struct.pack_into('>I', out, 8 + i * 20 + 12, len(piece))
+    return bytes(out)
+
+
+def is_fat_macho(data):
+    # Java class files start with the same magic number, so check that the header is plausible
+    if len(data) < 8 or struct.unpack_from('>I', data, 0)[0] != FAT_MAGIC:
+        return False
+    nfat_arch = struct.unpack_from('>I', data, 4)[0]
+    if not 0 < nfat_arch < 8 or len(data) < 8 + nfat_arch * 20:
+        return False
+    for i in range(nfat_arch):
+        offset, size = struct.unpack_from('>II', data, 8 + i * 20 + 8)
+        if offset + size > len(data) or struct.unpack_from('<I', data, offset)[0] != MH_MAGIC_64:
+            return False
+    return True
+
+
+def main(directory):
+    count = 0
+    for root, _, files in os.walk(directory):
+        for name in files:
+            path = os.path.join(root, name)
+            if os.path.islink(path):
+                continue
+            with open(path, 'rb') as f:
+                head = f.read(4)
+                if len(head) < 4:
+                    continue
+                if struct.unpack('<I', head)[0] != MH_MAGIC_64 \
+                        and struct.unpack('>I', head)[0] != FAT_MAGIC:
+                    continue
+                data = head + f.read()
+            if is_fat_macho(data):
+                stripped = strip_fat(data)
+            elif struct.unpack_from('<I', data, 0)[0] == MH_MAGIC_64:
+                stripped = strip_thin(data)
+            else:
+                continue
+            if stripped is None:
+                continue
+            mode = os.stat(path).st_mode
+            with open(path, 'wb') as f:
+                f.write(stripped)
+            os.chmod(path, mode)
+            count += 1
+    print(f"Removed {count} code signature(s)")
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        sys.exit(__doc__)
+    main(sys.argv[1])
