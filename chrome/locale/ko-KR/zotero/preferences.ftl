@@ -147,7 +147,7 @@ fulltext-stats-notes-indexed = Notes indexed:
 ## Dropbox file sync
 
 preferences-sync-dropbox-intro = 내 라이브러리의 첨부파일은 Dropbox에 저장합니다. 문헌 정보·메모·주석은 지금처럼 { -app-name } 계정으로 동기화합니다.
-preferences-sync-dropbox-setup-hint = <label data-l10n-name="app-console-link">Dropbox App Console</label>에서 “App folder” 접근 방식으로 앱을 만들고, Permissions 탭에서 files.content.write, files.content.read, files.metadata.read를 켜세요. Settings 탭의 Redirect URIs에 아래 주소를 추가한 다음 App key를 여기에 붙여 넣으세요.
+preferences-sync-dropbox-setup-hint = <label data-l10n-name="app-console-link">Dropbox App Console</label>에서 “App folder” 접근 방식으로 앱을 만들고, Permissions 탭에서 files.content.write, files.content.read, files.metadata.read를 켠 뒤 맨 아래 Submit을 누르세요. Settings 탭의 Redirect URIs에 아래 주소를 추가한 다음 App key를 여기에 붙여 넣으세요. 나중에 권한을 바꾸면 ‘다시 연결’을 눌러야 적용됩니다.
 preferences-sync-dropbox-redirect-uri = 리디렉션 주소:
 preferences-sync-dropbox-app-key = 앱 키:
 preferences-sync-dropbox-folder = 폴더:
@@ -159,6 +159,12 @@ preferences-sync-dropbox-connect =
     .label = Dropbox 연결…
 preferences-sync-dropbox-verify =
     .label = 연결 확인
+preferences-sync-dropbox-reconnect =
+    .label = 다시 연결…
+preferences-sync-dropbox-reconnect-title = Dropbox 다시 연결
+preferences-sync-dropbox-reconnect-text = Dropbox 승인은 처음 허용할 때의 권한만 계속 갖습니다. Dropbox App Console의 Permissions 탭에서 이 권한을 켜고 맨 아래 Submit을 누른 뒤, 다시 연결해 새로 허용하세요.
+preferences-sync-dropbox-reconnect-now = 다시 연결
+preferences-sync-dropbox-open-app-console = App Console 열기
 preferences-sync-dropbox-disconnect =
     .label = 연결 해제
 preferences-sync-dropbox-waiting = 브라우저에서 접근을 허용하세요…

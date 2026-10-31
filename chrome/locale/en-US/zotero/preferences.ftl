@@ -167,7 +167,7 @@ fulltext-stats-notes-indexed = Notes indexed:
 ## Dropbox file sync
 
 preferences-sync-dropbox-intro = Attachment files in My Library are stored in your Dropbox. Items, notes, and annotations still sync with your { -app-name } account.
-preferences-sync-dropbox-setup-hint = In the <label data-l10n-name="app-console-link">Dropbox App Console</label>, create an app with “App folder” access, turn on files.content.write, files.content.read, and files.metadata.read on the Permissions tab, add the redirect URI below on the Settings tab, and enter the app key here.
+preferences-sync-dropbox-setup-hint = In the <label data-l10n-name="app-console-link">Dropbox App Console</label>, create an app with “App folder” access, turn on files.content.write, files.content.read, and files.metadata.read on the Permissions tab and click Submit, add the redirect URI below on the Settings tab, and enter the app key here. If you change permissions later, choose Connect Again.
 preferences-sync-dropbox-redirect-uri = Redirect URI:
 preferences-sync-dropbox-app-key = App key:
 preferences-sync-dropbox-folder = Folder:
@@ -179,6 +179,12 @@ preferences-sync-dropbox-connect =
     .label = Connect Dropbox…
 preferences-sync-dropbox-verify =
     .label = Verify Connection
+preferences-sync-dropbox-reconnect =
+    .label = Connect Again…
+preferences-sync-dropbox-reconnect-title = Connect Dropbox Again
+preferences-sync-dropbox-reconnect-text = An authorization keeps the permissions it was given with. Turn on the permission on the Permissions tab of your app in the Dropbox App Console and click Submit, and then connect again to authorize it.
+preferences-sync-dropbox-reconnect-now = Connect Again
+preferences-sync-dropbox-open-app-console = Open App Console
 preferences-sync-dropbox-disconnect =
     .label = Disconnect
 preferences-sync-dropbox-waiting = Allow access in your browser…

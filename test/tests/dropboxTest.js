@@ -699,6 +699,73 @@ describe("Zotero.Sync.Storage.Mode.Dropbox", function () {
 	});
 	
 	
+	describe("Settings", function () {
+		var prefWin;
+		
+		beforeEach(async function () {
+			// Logged in, without network requests
+			stubs.push(sinon.stub(Zotero.Sync.Data.Local, 'getAPIKey').resolves('x'.repeat(24)));
+			stubs.push(sinon.stub(Zotero.Sync.Runner, 'checkAccess').resolves({ username: 'testuser', emails: [] }));
+			prefWin = await loadPrefPane('account');
+		});
+		
+		afterEach(function () {
+			prefWin.close();
+		});
+		
+		async function waitFor(cb) {
+			var result = await waitForCallback(cb, 10, 3);
+			if (result instanceof Error) {
+				throw result;
+			}
+		}
+		
+		it("should offer to connect again while connected", async function () {
+			var doc = prefWin.document;
+			await waitFor(() => !doc.getElementById('storage-dropbox-verify').hidden);
+			assert.isFalse(doc.getElementById('storage-dropbox-reconnect').hidden);
+			assert.isTrue(doc.getElementById('storage-dropbox-connect').hidden);
+		});
+		
+		it("should offer to connect again when the authorization lacks a permission", async function () {
+			fake.failures['files/download'] = [{
+				status: 401,
+				body: {
+					error_summary: "missing_scope/..",
+					error: { ".tag": "missing_scope", required_scope: "files.content.read" }
+				}
+			}];
+			var sync = prefWin.Zotero_Preferences.Sync;
+			var confirmStub = sinon.stub(Zotero.Prompt, 'confirm').returns(0);
+			stubs.push(confirmStub);
+			var connectStub = sinon.stub(sync, 'connectDropbox').resolves();
+			stubs.push(connectStub);
+			
+			assert.isFalse(await sync.verifyDropbox());
+			assert.isTrue(confirmStub.calledOnce);
+			assert.include(confirmStub.firstCall.args[0].text, "files.content.read");
+			assert.isTrue(connectStub.calledOnce);
+		});
+		
+		it("shouldn't connect again if the user cancels", async function () {
+			fake.failures['files/download'] = [{
+				status: 401,
+				body: {
+					error_summary: "missing_scope/..",
+					error: { ".tag": "missing_scope", required_scope: "files.content.read" }
+				}
+			}];
+			var sync = prefWin.Zotero_Preferences.Sync;
+			stubs.push(sinon.stub(Zotero.Prompt, 'confirm').returns(1));
+			var connectStub = sinon.stub(sync, 'connectDropbox').resolves();
+			stubs.push(connectStub);
+			
+			assert.isFalse(await sync.verifyDropbox());
+			assert.isFalse(connectStub.called);
+		});
+	});
+	
+	
 	describe("#checkServer()", function () {
 		it("should create the folder and verify file access", async function () {
 			await controller.checkServer();
