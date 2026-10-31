@@ -62,14 +62,17 @@ def main():
     for size in (32, 64, 128):
         badged(size, frames).save(path('app', 'linux', 'icons', f'icon{size}.png'))
 
-    # Windows icon (also embedded in zotero.exe by the fork build)
+    # Windows icon, embedded in zotero.exe by the fork build. rcedit numbers the new images from
+    # the first image ID of the exe's main icon group, and another group's images start at ID 5,
+    # so use four images rather than five.
+    exe_sizes = [16, 32, 48, 256]
     win_sizes = [16, 24, 32, 48, 256]
     win_icons = {s: badged(s, frames) for s in win_sizes}
     win_icons[256].save(
         path('app', 'win', 'zotero.ico'),
         format='ICO',
-        sizes=[(s, s) for s in win_sizes],
-        append_images=[win_icons[s] for s in win_sizes[:-1]],
+        sizes=[(s, s) for s in exe_sizes],
+        append_images=[win_icons[s] for s in exe_sizes[:-1]],
     )
 
     # macOS icon -- the stock icon only goes up to 256 px, so larger sizes are upscaled
