@@ -1313,3 +1313,10 @@ itembox-show-empty-fields = { $count ->
    *[other] Show { $count } Empty Fields
 }
 itembox-hide-empty-fields = Hide Empty Fields
+
+## Achmage Edition
+
+achmage-edition-button =
+    .tooltiptext = Achmage Edition: Dropbox file sync and readable skin
+achmage-edition-about = Achmage Edition is a custom build of { -app-name } with Dropbox file sync and a readable skin.
+achmage-edition-source = Source code and new versions

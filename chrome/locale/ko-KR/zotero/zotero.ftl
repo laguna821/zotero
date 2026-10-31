@@ -1174,3 +1174,10 @@ menu-view-readable-skin =
     .label = 가독성 스킨
 itembox-show-empty-fields = 빈 필드 { $count }개 보기
 itembox-hide-empty-fields = 빈 필드 숨기기
+
+## Achmage Edition
+
+achmage-edition-button =
+    .tooltiptext = Achmage Edition: Dropbox 파일 동기화 · 가독성 스킨
+achmage-edition-about = { -app-name }에 Dropbox 파일 동기화와 가독성 스킨을 더한 Achmage Edition입니다.
+achmage-edition-source = 소스 코드와 새 버전
