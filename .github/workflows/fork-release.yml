@@ -61,7 +61,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: achmage-edition
-          path: app/dist/*
+          path: app/dist-achmage/*
           if-no-files-found: error
 
       - name: Create draft release
@@ -69,8 +69,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(ls app/dist | sed -n 's/^SHA256SUMS-//p')
-          gh release create "v${version}" app/dist/* \
+          version=$(ls app/dist-achmage | sed -n 's/^SHA256SUMS-//p')
+          gh release create "v${version}" app/dist-achmage/* \
             --draft \
             --target "$GITHUB_SHA" \
             --title "Zotero ${version} (Achmage Edition)" \

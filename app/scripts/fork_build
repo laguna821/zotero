@@ -4,7 +4,7 @@ set -euo pipefail
 #
 # Build the Achmage Edition packages for Windows, macOS, and Linux
 #
-# Runs on Linux or macOS. Packages are written to app/dist/:
+# Runs on Linux or macOS. Packages are written to app/dist-achmage/:
 #
 #   Zotero-<version>_win-x64.zip          Portable app -- extract and run zotero.exe
 #   Zotero-<version>_mac.zip              Zotero.app, signed ad hoc
@@ -141,13 +141,16 @@ function sign_mac_app {
 	fi
 }
 
+# build.sh recreates its dist directory on every run, so collect packages separately
+OUT_DIR="$APP_ROOT_DIR/dist-achmage"
+
 hash=$(git -C "$ROOT_DIR" rev-parse --short HEAD)
 build_dir=$(mktemp -d)
 trap 'rm -rf "$build_dir"' EXIT
 
 "$SCRIPT_DIR/prepare_build" -s "$ROOT_DIR/build" -o "$build_dir" -c "$VERSION_CHANNEL" -m "$hash"
 version=$(cat "$build_dir/version")
-mkdir -p "$DIST_DIR"
+mkdir -p "$OUT_DIR"
 
 # build.sh clears the staging directory each time, so package each platform right after staging it
 for (( i=0; i<${#platforms}; i++ )); do
@@ -157,7 +160,7 @@ for (( i=0; i<${#platforms}; i++ )); do
 			stage="$STAGE_DIR/Zotero_win-x64"
 			install_window_icons "$stage/app"
 			set_windows_exe_icon "$stage/zotero.exe"
-			package="$DIST_DIR/Zotero-${version}_win-x64.zip"
+			package="$OUT_DIR/Zotero-${version}_win-x64.zip"
 			rm -f "$package"
 			(cd "$STAGE_DIR" && zip -rqX "$package" Zotero_win-x64)
 			;;
@@ -168,7 +171,7 @@ for (( i=0; i<${#platforms}; i++ )); do
 			fi
 			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p m -c "$UPDATE_CHANNEL" -s
 			sign_mac_app "$STAGE_DIR/Zotero.app"
-			package="$DIST_DIR/Zotero-${version}_mac.zip"
+			package="$OUT_DIR/Zotero-${version}_mac.zip"
 			rm -f "$package"
 			(cd "$STAGE_DIR" && zip -rqyX "$package" Zotero.app)
 			;;
@@ -177,7 +180,7 @@ for (( i=0; i<${#platforms}; i++ )); do
 			"$APP_ROOT_DIR/build.sh" -d "$build_dir" -p l -a x64 -c "$UPDATE_CHANNEL" -s
 			stage="$STAGE_DIR/Zotero_linux-x86_64"
 			install_window_icons "$stage/app"
-			package="$DIST_DIR/Zotero-${version}_linux-x86_64.tar.xz"
+			package="$OUT_DIR/Zotero-${version}_linux-x86_64.tar.xz"
 			rm -f "$package"
 			tar -C "$STAGE_DIR" -cJf "$package" Zotero_linux-x86_64
 			;;
@@ -186,5 +189,5 @@ for (( i=0; i<${#platforms}; i++ )); do
 	echo
 done
 
-(cd "$DIST_DIR" && sha256sum Zotero-"${version}"_* > "SHA256SUMS-${version}")
-echo "Done: $DIST_DIR"
+(cd "$OUT_DIR" && sha256sum Zotero-"${version}"_* > "SHA256SUMS-${version}")
+echo "Done: $OUT_DIR"

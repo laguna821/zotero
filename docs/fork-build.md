@@ -27,7 +27,7 @@ app/scripts/fork_build          # -p w, -p m, -p l 로 플랫폼 선택
 
 필요한 것: Node 22, zip·unzip, 7-Zip 22 이상(`7z`), rsync, perl, python3, xz, curl, Git LFS. Linux에서 macOS 설치본을 만들려면 [rcodesign](https://github.com/indygreg/apple-platform-rs)도 필요합니다. wine이 있으면 `zotero.exe`에도 Achmage 아이콘을 넣습니다.
 
-결과는 `app/dist/`에 생깁니다.
+결과는 `app/dist-achmage/`에 생깁니다.
 
 - Windows: 설치 프로그램 대신 압축을 풀어 쓰는 포터블 zip (NSIS 설치 프로그램은 Windows에서만 만들 수 있음)
 - macOS: 임시(ad hoc) 서명한 `Zotero.app` zip. Apple 공증이 없으므로 설치 후 `xattr -dr com.apple.quarantine`가 필요합니다.
