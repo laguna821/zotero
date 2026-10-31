@@ -120,7 +120,9 @@ function set_windows_exe_icon {
 	fi
 	local prefix="$APP_ROOT_DIR/xulrunner/wineprefix"
 	mkdir -p "$prefix"
-	if WINEPREFIX="$prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" \
+	# Without a display, so that Wine's first-run setup doesn't open windows
+	if env -u DISPLAY -u WAYLAND_DISPLAY \
+			WINEPREFIX="$prefix" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml=" \
 			timeout 300 wine "$rcedit" "$exe" --set-icon "$APP_ROOT_DIR/win/zotero.ico"; then
 		echo "Set zotero.exe icon"
 	else
